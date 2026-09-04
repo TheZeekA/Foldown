@@ -5,7 +5,10 @@ import remarkGfm from "remark-gfm";
 import remarkRehype from "remark-rehype";
 import rehypeSanitize from "rehype-sanitize";
 import rehypeStringify from "rehype-stringify";
+import { convertFileSrc } from "@tauri-apps/api/core";
 import { useEditorStore } from "../../stores/editor";
+import { useWorkspaceStore } from "../../stores/workspace";
+import { replaceLocalImageSources } from "./imageUrls";
 import "./Preview.css";
 
 const processor = unified()
@@ -18,6 +21,7 @@ const processor = unified()
 export function Preview() {
   const body = useEditorStore((s) => s.body);
   const openPath = useEditorStore((s) => s.openPath);
+  const workspaceRoot = useWorkspaceStore((s) => s.path);
   const [html, setHtml] = useState("");
   const firstRenderRef = useRef(true);
 
@@ -30,7 +34,10 @@ export function Preview() {
     let cancelled = false;
     const render = () => {
       processor.process(body).then((file) => {
-        if (!cancelled) setHtml(String(file));
+        if (!cancelled) {
+          const rendered = String(file);
+          setHtml(openPath && workspaceRoot ? replaceLocalImageSources(rendered, openPath, workspaceRoot, convertFileSrc) : rendered);
+        }
       });
     };
 
@@ -47,7 +54,7 @@ export function Preview() {
       cancelled = true;
       clearTimeout(timeout);
     };
-  }, [body]);
+  }, [body, openPath, workspaceRoot]);
 
   return (
     <div className="preview">

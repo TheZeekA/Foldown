@@ -57,6 +57,10 @@ export function importFile(sourcePath: string, workspaceRoot: string): Promise<s
   return invoke<string>("import_file", { sourcePath, workspaceRoot });
 }
 
+export function importImageAsset(sourcePath: string, markdownPath: string, workspaceRoot: string): Promise<string> {
+  return invoke<string>("import_image_asset", { sourcePath, markdownPath, workspaceRoot });
+}
+
 export function takePendingOpen(): Promise<string | null> {
   return invoke<string | null>("take_pending_open");
 }

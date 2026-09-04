@@ -5,6 +5,9 @@ import { markdown } from "@codemirror/lang-markdown";
 import { languages } from "@codemirror/language-data";
 import { useEditorStore } from "../../stores/editor";
 import "./Editor.css";
+import { importImageAsset } from "../../lib/tauriApi";
+import { buildImageMarkdown, isSupportedImagePath } from "./imageDrop";
+import { message } from "@tauri-apps/plugin-dialog";
 
 /** Tags a programmatic full-doc replace (file load/switch/reload) so the update
  * listener below can tell it apart from a real keystroke — otherwise loading a
@@ -61,6 +64,10 @@ export function Editor() {
   const setBody = useEditorStore((s) => s.setBody);
   const setView = useEditorStore((s) => s.setView);
   const setSelectionRange = useEditorStore((s) => s.setSelectionRange);
+  const selectionRange = useEditorStore((s) => s.selectionRange);
+  const openPath = useEditorStore((s) => s.openPath);
+  const workspaceRoot = useEditorStore((s) => s.workspaceRoot);
+  const replaceRange = useEditorStore((s) => s.replaceRange);
   const pendingJump = useEditorStore((s) => s.pendingJump);
   const clearPendingJump = useEditorStore((s) => s.clearPendingJump);
   const pendingJumpPosition = useEditorStore((s) => s.pendingJumpPosition);
@@ -169,7 +176,23 @@ export function Editor() {
     clearPendingJumpPosition();
   }, [pendingJumpPosition, clearPendingJumpPosition]);
 
-  return <div ref={containerRef} className="editor" />;
+  const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
+    const dropped = Array.from(event.dataTransfer.files) as Array<File & { path?: string }>;
+    const image = dropped.find((file) => file.path && isSupportedImagePath(file.path));
+    if (!image?.path) return;
+    event.preventDefault();
+    event.stopPropagation();
+    if (!openPath || !workspaceRoot) return;
+    try {
+      const assetPath = await importImageAsset(image.path, openPath, workspaceRoot);
+      const position = selectionRange?.to ?? 0;
+      replaceRange(position, position, `${buildImageMarkdown(assetPath)}\n`);
+    } catch (error) {
+      await message(`Could not import image: ${String(error)}`, { title: "Foldown", kind: "error" });
+    }
+  };
+
+  return <div ref={containerRef} className="editor" onDrop={handleDrop} />;
 }
 
 export default Editor;
