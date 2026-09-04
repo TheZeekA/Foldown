@@ -39,6 +39,24 @@ pub fn import_file(
 }
 
 #[tauri::command]
+pub fn import_image_asset(
+    active: State<ActiveWorkspace>,
+    source_path: String,
+    markdown_path: String,
+    workspace_root: String,
+) -> AppResult<String> {
+    let root = active.require(Path::new(&workspace_root))?;
+    let _ = ops::ensure_within_workspace(Path::new(&markdown_path), &root)?;
+    let imported = ops::import_image_asset(Path::new(&source_path), &root)?;
+    let relative = imported
+        .strip_prefix(&root)
+        .unwrap_or(&imported)
+        .to_string_lossy()
+        .replace('\\', "/");
+    Ok(relative)
+}
+
+#[tauri::command]
 pub fn save_file(
     active: State<ActiveWorkspace>,
     index: State<KnowledgeIndex>,

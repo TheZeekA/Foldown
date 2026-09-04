@@ -117,6 +117,7 @@ pub fn run() {
             commands::files::delete_path,
             commands::files::duplicate_path,
             commands::files::import_file,
+            commands::files::import_image_asset,
             commands::history::record_history_snapshot,
             commands::history::list_history,
             commands::history::get_history_content,

@@ -215,6 +215,37 @@ pub fn import_file(source: &Path, dest_dir: &Path) -> AppResult<PathBuf> {
     Ok(candidate)
 }
 
+/// Copies a supported image into the workspace's shared assets directory.
+/// Existing assets are preserved by adding a numeric suffix to collisions.
+pub fn import_image_asset(source: &Path, workspace_root: &Path) -> AppResult<PathBuf> {
+    if !source.is_file() {
+        return Err(AppError::Message(format!("\"{}\" is not a file", source.display())));
+    }
+    let extension = source.extension().and_then(|value| value.to_str()).unwrap_or_default();
+    if !matches!(extension.to_ascii_lowercase().as_str(), "png" | "jpg" | "jpeg" | "gif" | "webp" | "svg") {
+        return Err(AppError::Message("Only PNG, JPG, JPEG, GIF, WebP, and SVG images are supported".to_string()));
+    }
+    let name = source.file_name().ok_or_else(|| AppError::Message("Source file has no name".to_string()))?;
+    let assets = workspace_root.join("assets");
+    fs::create_dir_all(&assets)?;
+    let original = assets.join(name);
+    let candidate = if !original.exists() {
+        original
+    } else {
+        let stem = source.file_stem().unwrap_or_default().to_string_lossy();
+        let ext = source.extension().unwrap_or_default().to_string_lossy();
+        let mut n = 1;
+        let mut candidate = assets.join(format!("{stem}-{n}.{ext}"));
+        while candidate.exists() {
+            n += 1;
+            candidate = assets.join(format!("{stem}-{n}.{ext}"));
+        }
+        candidate
+    };
+    fs::copy(source, &candidate)?;
+    Ok(candidate)
+}
+
 fn unique_sibling_path(path: &Path) -> PathBuf {
     let parent = path.parent().map(Path::to_path_buf).unwrap_or_default();
     let stem = path
@@ -452,6 +483,32 @@ mod tests {
             second.file_name().unwrap().to_str().unwrap(),
             "notes copy.md"
         );
+    }
+
+    #[test]
+    fn import_image_asset_accepts_images_and_uses_numeric_collisions() {
+        let source_dir = temp_dir();
+        let workspace = temp_dir();
+        let source = source_dir.join("diagram.PNG");
+        fs::write(&source, b"image bytes").unwrap();
+
+        let first = import_image_asset(&source, &workspace).unwrap();
+        assert_eq!(first.strip_prefix(&workspace).unwrap(), Path::new("assets/diagram.PNG"));
+        assert_eq!(fs::read(&first).unwrap(), b"image bytes");
+
+        let second = import_image_asset(&source, &workspace).unwrap();
+        assert_eq!(second.strip_prefix(&workspace).unwrap(), Path::new("assets/diagram-1.PNG"));
+    }
+
+    #[test]
+    fn import_image_asset_rejects_unsupported_extensions() {
+        let source_dir = temp_dir();
+        let workspace = temp_dir();
+        let source = source_dir.join("notes.md");
+        fs::write(&source, b"not an image").unwrap();
+
+        assert!(import_image_asset(&source, &workspace).is_err());
+        assert!(!workspace.join("assets").exists());
     }
 
     #[test]
