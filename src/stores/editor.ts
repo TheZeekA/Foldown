@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { EditorView } from "@codemirror/view";
-import { readFile, saveFile, unwatchFile, watchFile } from "../lib/tauriApi";
+import { readFile, recordHistorySnapshot, saveFile, unwatchFile, watchFile } from "../lib/tauriApi";
 import { splitFrontmatter } from "../editor/frontmatter";
 
 export type ViewMode = "source" | "split" | "preview";
@@ -15,6 +15,7 @@ interface EditorState {
   workspaceRoot: string | null;
   /** Full file content, including any frontmatter block — the source of truth for saving. */
   content: string;
+  lastSavedContent: string;
   /** Content minus the frontmatter block — what the source editor and preview actually show. */
   body: string;
   frontmatterPrefix: string;
@@ -70,6 +71,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   openPath: null,
   workspaceRoot: null,
   content: "",
+  lastSavedContent: "",
   body: "",
   frontmatterPrefix: "",
   frontmatterData: {},
@@ -124,6 +126,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         openPath: path,
         workspaceRoot,
         ...applyLoadedContent(content),
+        lastSavedContent: content,
         loading: false,
         dirty: false,
         saveStatus: "idle",
@@ -161,6 +164,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       openPath: null,
       workspaceRoot: null,
       content: "",
+      lastSavedContent: "",
       body: "",
       frontmatterPrefix: "",
       frontmatterData: {},
@@ -215,8 +219,15 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
     set({ saveStatus: "saving" });
     try {
+      if (dirty && content !== get().lastSavedContent) {
+        try {
+          await recordHistorySnapshot(workspaceRoot, openPath, get().lastSavedContent);
+        } catch {
+          // History is best-effort; a history failure must never block saving.
+        }
+      }
       await saveFile(openPath, workspaceRoot, content);
-      set({ dirty: false, saveStatus: "saved" });
+      set({ dirty: false, saveStatus: "saved", lastSavedContent: content });
     } catch (error) {
       // Rethrow (in addition to recording the error in state) so callers that
       // are about to do something destructive on the assumption the save
@@ -233,6 +244,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       const content = await readFile(openPath, workspaceRoot);
       set((s) => ({
         ...applyLoadedContent(content),
+        lastSavedContent: content,
         dirty: false,
         saveStatus: "saved",
         externalChange: false,

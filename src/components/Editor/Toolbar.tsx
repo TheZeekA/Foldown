@@ -169,7 +169,7 @@ function SaveStatus() {
   return <span className={`toolbar__save-status toolbar__save-status--${saveStatus}`}>{label}</span>;
 }
 
-export function Toolbar() {
+export function Toolbar({ onHistoryToggle }: { onHistoryToggle?: () => void }) {
   const view = useEditorStore((s) => s.view);
   const viewMode = useEditorStore((s) => s.viewMode);
   const setViewMode = useEditorStore((s) => s.setViewMode);
@@ -203,6 +203,7 @@ export function Toolbar() {
         <ToolbarButton label="Image" icon={icons.image} disabled={formattingDisabled} onClick={run(cmd.insertImage)} />
       </div>
       <div className="toolbar__spacer" />
+      {onHistoryToggle && <button type="button" className="toolbar__text-button" onClick={onHistoryToggle}>History</button>}
       <SaveStatus />
       <div className="toolbar__group toolbar__group--modes">
         {(

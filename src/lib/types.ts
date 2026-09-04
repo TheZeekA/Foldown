@@ -90,6 +90,14 @@ export interface SelectionAiResult {
   citations: AiContextChunk[];
 }
 
+export interface HistoryEntry {
+  id: number;
+  workspaceRoot: string;
+  relativePath: string;
+  createdAt: number;
+  byteLength: number;
+}
+
 export interface BulkConvertResult {
   source_path: string;
   dest_path: string | null;

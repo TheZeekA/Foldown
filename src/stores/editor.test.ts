@@ -3,11 +3,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("../lib/tauriApi", () => ({
   readFile: vi.fn(),
   saveFile: vi.fn(),
+  recordHistorySnapshot: vi.fn().mockResolvedValue(undefined),
   watchFile: vi.fn().mockResolvedValue(undefined),
   unwatchFile: vi.fn().mockResolvedValue(undefined),
 }));
 
-import { readFile, saveFile } from "../lib/tauriApi";
+import { readFile, recordHistorySnapshot, saveFile } from "../lib/tauriApi";
 import { useEditorStore } from "./editor";
 
 function deferred<T>() {
@@ -24,10 +25,12 @@ describe("editor store", () => {
   beforeEach(() => {
     vi.mocked(readFile).mockReset();
     vi.mocked(saveFile).mockReset();
+    vi.mocked(recordHistorySnapshot).mockReset().mockResolvedValue(undefined);
     useEditorStore.setState({
       openPath: null,
       workspaceRoot: null,
       content: "",
+      lastSavedContent: "",
       body: "",
       dirty: false,
       saveStatus: "idle",
@@ -48,6 +51,19 @@ describe("editor store", () => {
 
     await expect(useEditorStore.getState().saveNow(true)).rejects.toThrow("disk full");
     expect(useEditorStore.getState().saveStatus).toBe("error");
+  });
+
+  it("saves even when recording the previous version fails", async () => {
+    vi.mocked(readFile).mockResolvedValue("original");
+    await useEditorStore.getState().openFile("A.md", "C:\\ws");
+    useEditorStore.getState().setBody("edited");
+    vi.mocked(recordHistorySnapshot).mockRejectedValueOnce(new Error("history unavailable"));
+    vi.mocked(saveFile).mockResolvedValue(undefined);
+
+    await useEditorStore.getState().saveNow(true);
+
+    expect(saveFile).toHaveBeenCalledWith("A.md", "C:\\ws", "edited");
+    expect(useEditorStore.getState().dirty).toBe(false);
   });
 
   it("stores and clears a document-position jump request", () => {

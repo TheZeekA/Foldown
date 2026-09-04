@@ -3,6 +3,7 @@ mod commands;
 mod convert;
 mod error;
 mod fs;
+mod history;
 mod native;
 mod search;
 mod settings;
@@ -12,6 +13,7 @@ use tauri::{Emitter, Manager, WindowEvent};
 
 use ai::commands::AiRuntime;
 use ai::index::KnowledgeIndex;
+use history::HistoryStore;
 use fs::watcher::{FileWatcher, WorkspaceWatcher};
 use native::PendingOpen;
 use search::index::SearchIndex;
@@ -40,7 +42,8 @@ pub fn run() {
             let db_path = app.path().app_data_dir()?.join("foldown.db");
             let store = SettingsStore::open(db_path.clone())?;
             app.manage(store);
-            app.manage(KnowledgeIndex::open(db_path)?);
+            app.manage(KnowledgeIndex::open(db_path.clone())?);
+            app.manage(HistoryStore::open(db_path.clone())?);
             app.manage(AiRuntime::default());
             app.manage(FileWatcher::new());
             app.manage(WorkspaceWatcher::new());
@@ -113,6 +116,12 @@ pub fn run() {
             commands::files::delete_path,
             commands::files::duplicate_path,
             commands::files::import_file,
+            commands::history::record_history_snapshot,
+            commands::history::list_history,
+            commands::history::get_history_content,
+            commands::history::delete_history_snapshot,
+            commands::history::clear_history,
+            commands::history::restore_history_snapshot,
             commands::search::index_workspace,
             commands::search::search_workspace,
             commands::convert::convert_document,

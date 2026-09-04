@@ -5,6 +5,8 @@ import { Editor } from "./Editor";
 import { FrontmatterPanel } from "./FrontmatterPanel";
 import { Preview } from "../Preview/Preview";
 import { DocumentOutline } from "./DocumentOutline";
+import { SelectionAiPanel } from "../../features/SelectionAi/SelectionAiPanel";
+import { HistoryPanel } from "../../features/History/HistoryPanel";
 import { useEditorStore } from "../../stores/editor";
 import { clampRange } from "../../lib/layout";
 
@@ -15,6 +17,7 @@ export function EditorPane() {
   const keepMine = useEditorStore((s) => s.keepMine);
   const body = useEditorStore((s) => s.body);
   const [splitRatio, setSplitRatio] = useState(50);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const bodyRef = useRef<HTMLDivElement>(null);
   const splitResizeRef = useRef<{ startX: number; startRatio: number; width: number } | null>(null);
 
@@ -40,7 +43,8 @@ export function EditorPane() {
 
   return (
     <div className="editor-pane">
-      <Toolbar />
+      <Toolbar onHistoryToggle={() => setHistoryOpen((open) => !open)} />
+      <SelectionAiPanel />
       {externalChange && (
         <div className="editor-pane__banner">
           <span>This file changed outside Foldown.</span>
@@ -80,6 +84,7 @@ export function EditorPane() {
             <Preview />
           </div>
         )}
+        {historyOpen && <HistoryPanel onClose={() => setHistoryOpen(false)} />}
       </div>
     </div>
   );
