@@ -10,8 +10,6 @@ Foldown is a free, open-source Windows Markdown editor for people who want a fas
 
 There is no required account, subscription, built-in telemetry, proprietary document format, or database lock-in. Open the same files in any other Markdown editor whenever you want.
 
-![Foldown workspace welcome screen](img/foldown1.png)
-
  **Foldown 1.2.3 is the current production release.** Download the installer or standalone Windows executable from the [GitHub Releases page](https://github.com/TheZeekA/foldown/releases/latest).
 
 ## Features
@@ -22,6 +20,28 @@ There is no required account, subscription, built-in telemetry, proprietary docu
 - **Workspace search** across your Markdown files with highlighted snippets
 - **Document conversion** from TXT, HTML, CSV, and DOCX into Markdown
 - **Safe file actions** with workspace containment checks, diffs, confirmations, and Recycle Bin deletion
+
+## Screenshots
+
+### Welcome screen
+
+![Foldown welcome screen](img/foldown1.png)
+
+### Markdown editor and live preview
+
+![Foldown Markdown editor and live preview](img/foldown2.png)
+
+### Interactive Mode workspace assistant
+
+![Foldown Interactive Mode](img/foldown3.png)
+
+### AI provider settings
+
+![Foldown AI Settings](img/foldown4.png)
+
+### Document conversion tools
+
+![Foldown document conversion tools](img/foldown5.png)
 
 ### Markdown editing
 
