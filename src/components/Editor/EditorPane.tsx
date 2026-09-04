@@ -4,6 +4,7 @@ import { Toolbar } from "./Toolbar";
 import { Editor } from "./Editor";
 import { FrontmatterPanel } from "./FrontmatterPanel";
 import { Preview } from "../Preview/Preview";
+import { DocumentOutline } from "./DocumentOutline";
 import { useEditorStore } from "../../stores/editor";
 import { clampRange } from "../../lib/layout";
 
@@ -12,6 +13,7 @@ export function EditorPane() {
   const externalChange = useEditorStore((s) => s.externalChange);
   const reloadFromDisk = useEditorStore((s) => s.reloadFromDisk);
   const keepMine = useEditorStore((s) => s.keepMine);
+  const body = useEditorStore((s) => s.body);
   const [splitRatio, setSplitRatio] = useState(50);
   const bodyRef = useRef<HTMLDivElement>(null);
   const splitResizeRef = useRef<{ startX: number; startRatio: number; width: number } | null>(null);
@@ -52,8 +54,11 @@ export function EditorPane() {
       )}
       <FrontmatterPanel />
       <div ref={bodyRef} className="editor-pane__body" data-mode={viewMode}>
-        <div className="editor-pane__source" style={{ ...(viewMode === "preview" ? { display: "none" } : {}), ...(viewMode === "split" ? { flex: `0 0 ${splitRatio}%` } : {}) }}>
-          <Editor />
+        <div className="editor-pane__source-area" style={{ ...(viewMode === "preview" ? { display: "none" } : {}), ...(viewMode === "split" ? { flex: `0 0 ${splitRatio}%` } : {}) }}>
+          <DocumentOutline body={body} />
+          <div className="editor-pane__source">
+            <Editor />
+          </div>
         </div>
         {viewMode === "split" && (
           <div

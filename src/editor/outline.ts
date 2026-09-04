@@ -5,10 +5,6 @@ export interface MarkdownHeading {
   line: number;
 }
 
-function isFenceStart(line: string): boolean {
-  return /^\s{0,3}(`{3,}|~{3,})/.test(line);
-}
-
 export function extractMarkdownHeadings(markdown: string): MarkdownHeading[] {
   const headings: MarkdownHeading[] = [];
   let offset = 0;
