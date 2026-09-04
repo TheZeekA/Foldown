@@ -3,14 +3,25 @@
 </p>
 
 <p align="center">
-  A lightweight, local-first Markdown editor for Windows with an optional private AI workspace assistant.
+  A local-first AI Markdown editor for Windows with workspace search, document conversion, and privacy-focused storage.
 </p>
 
-Foldown keeps your notes as ordinary `.md` files on disk. There is no account, cloud storage, proprietary document format, or database lock-in. Open the same files in any other Markdown editor whenever you want.
+Foldown is a free, open-source Windows Markdown editor for people who want a fast file-based workspace without cloud lock-in. It keeps your notes as ordinary `.md` files on disk, adds full-text search and document conversion, and provides an optional AI workspace assistant that can use local, private-network, or cloud providers.
+
+There is no required account, subscription, built-in telemetry, proprietary document format, or database lock-in. Open the same files in any other Markdown editor whenever you want.
+
+![Foldown workspace welcome screen](img/foldown1.png)
 
  **Foldown 1.2.3 is the current production release.** Download the installer or standalone Windows executable from the [GitHub Releases page](https://github.com/TheZeekA/foldown/releases/latest).
 
 ## Features
+
+- **Local-first Markdown editing** with source, split, and rendered-preview modes
+- **AI workspace assistance** with local, OpenAI-compatible, Claude, and Gemini providers
+- **Privacy-focused storage** with local settings, indexing, and Windows Credential Manager-backed API keys
+- **Workspace search** across your Markdown files with highlighted snippets
+- **Document conversion** from TXT, HTML, CSV, and DOCX into Markdown
+- **Safe file actions** with workspace containment checks, diffs, confirmations, and Recycle Bin deletion
 
 ### Markdown editing
 
@@ -222,6 +233,32 @@ For delete requests, Foldown shows the target file and asks **Are you sure?** No
 - Conversation history is kept only for the current app session and resets when the workspace changes.
 - HTTP redirects are disabled for AI requests so workspace content cannot be silently redirected to another host.
 
+## Frequently asked questions
+
+### Is Foldown free?
+
+Yes. Foldown is open source under the [MIT License](LICENSE.md), with attribution to Zeeka Ltd / Teddy Jones required by the license.
+
+### Does Foldown work offline?
+
+The Markdown editor, workspace management, search, and local storage work offline. AI features require access to the provider endpoint you configure. Foldown has no built-in updater or background connection to a Zeeka server; new versions are published through GitHub Releases.
+
+### Where are my Markdown files stored?
+
+Foldown edits the files in the workspace folder you choose. Your notes are not copied into a proprietary document database.
+
+### Can I use a local AI model?
+
+Yes. Interactive Mode supports local or private-network OpenAI-compatible servers, including Ollama, LM Studio, and llama.cpp-compatible endpoints.
+
+### Does Foldown require an account?
+
+No. Foldown does not require an account or subscription. Cloud AI providers may have their own account and API-key requirements.
+
+### Is Foldown an alternative to Obsidian or Typora?
+
+Foldown is a file-based Windows Markdown editor with optional AI assistance, full-text workspace search, and document conversion. It may suit you if you want your notes to remain ordinary Markdown files and prefer a local-first desktop workflow.
+
 ## Development
 
 ### Prerequisites
@@ -273,7 +310,7 @@ src-tauri/target/release/bundle/nsis/Foldown_<version>_x64-setup.exe
 src-tauri/target/release/bundle/msi/Foldown_<version>_x64_en-US.msi
 ```
 
-Official release artifacts are Authenticode-signed with a Zeeka Limited self-signed certificate. Self-signing protects artifact integrity after the certificate is trusted, but it does not provide the public identity validation or SmartScreen reputation of a commercial code-signing certificate.
+Official Windows release artifacts are published on the [GitHub Releases page](https://github.com/TheZeekA/foldown/releases). Downloaded EXEs are currently unsigned, so Windows may display a SmartScreen warning. Users should download releases only from this repository.
 
 ## Technology
 
