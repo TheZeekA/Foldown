@@ -55,6 +55,7 @@ function App() {
       if (e.dataTransfer?.types.includes("Files")) e.preventDefault();
     };
     const handleWindowDrop = (e: DragEvent) => {
+      if (e.defaultPrevented) return;
       const files = e.dataTransfer?.files;
       if (!files || files.length === 0) return;
       e.preventDefault();

@@ -178,11 +178,15 @@ export function Editor() {
 
   const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
     const dropped = Array.from(event.dataTransfer.files) as Array<File & { path?: string }>;
-    const image = dropped.find((file) => file.path && isSupportedImagePath(file.path));
-    if (!image?.path) return;
+    const image = dropped.find((file) => isSupportedImagePath(file.path ?? file.name));
+    if (!image) return;
     event.preventDefault();
     event.stopPropagation();
     if (!openPath || !workspaceRoot) return;
+    if (!image.path) {
+      await message("Foldown could not access the dropped image path. Try dragging the image directly from File Explorer.", { title: "Foldown", kind: "error" });
+      return;
+    }
     try {
       const assetPath = await importImageAsset(image.path, openPath, workspaceRoot);
       const position = selectionRange?.to ?? 0;
