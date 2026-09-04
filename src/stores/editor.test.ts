@@ -34,6 +34,7 @@ describe("editor store", () => {
       error: null,
       requestSeq: 0,
       reloadToken: 0,
+      pendingJumpPosition: null,
     });
   });
 
@@ -46,6 +47,14 @@ describe("editor store", () => {
 
     await expect(useEditorStore.getState().saveNow(true)).rejects.toThrow("disk full");
     expect(useEditorStore.getState().saveStatus).toBe("error");
+  });
+
+  it("stores and clears a document-position jump request", () => {
+    useEditorStore.getState().jumpToPosition(42);
+    expect(useEditorStore.getState().pendingJumpPosition).toBe(42);
+
+    useEditorStore.getState().clearPendingJumpPosition();
+    expect(useEditorStore.getState().pendingJumpPosition).toBeNull();
   });
 
   it("a stale in-flight openFile can't resurrect content after a newer one wins", async () => {

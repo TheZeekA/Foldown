@@ -30,6 +30,8 @@ interface EditorState {
   reloadToken: number;
   /** A search match to scroll to and select once the target file's content is loaded into the view. */
   pendingJump: string | null;
+  /** A document position to scroll to after the active editor is ready. */
+  pendingJumpPosition: number | null;
   /** Bumped on every openFile/resetForWorkspace call; lets a superseded in-flight
    * openFile recognize it's stale (e.g. the user clicked another file, or switched
    * workspaces, before its readFile resolved) and skip applying its result. */
@@ -46,6 +48,8 @@ interface EditorState {
   handleFileChangedEvent: (path: string) => Promise<void>;
   jumpToText: (query: string) => void;
   clearPendingJump: () => void;
+  jumpToPosition: (position: number) => void;
+  clearPendingJumpPosition: () => void;
 }
 
 function applyLoadedContent(content: string) {
@@ -76,6 +80,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   externalChange: false,
   reloadToken: 0,
   pendingJump: null,
+  pendingJumpPosition: null,
   requestSeq: 0,
 
   openFile: async (path, workspaceRoot) => {
@@ -162,6 +167,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       saveStatus: "idle",
       externalChange: false,
       pendingJump: null,
+      pendingJumpPosition: null,
       // Invalidate any openFile still in flight so it can't repopulate the
       // editor with the old workspace's content after this reset.
       requestSeq: s.requestSeq + 1,
@@ -258,4 +264,6 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   jumpToText: (query) => set({ pendingJump: query }),
   clearPendingJump: () => set({ pendingJump: null }),
+  jumpToPosition: (position) => set({ pendingJumpPosition: position }),
+  clearPendingJumpPosition: () => set({ pendingJumpPosition: null }),
 }));

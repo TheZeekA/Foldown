@@ -62,6 +62,8 @@ export function Editor() {
   const setView = useEditorStore((s) => s.setView);
   const pendingJump = useEditorStore((s) => s.pendingJump);
   const clearPendingJump = useEditorStore((s) => s.clearPendingJump);
+  const pendingJumpPosition = useEditorStore((s) => s.pendingJumpPosition);
+  const clearPendingJumpPosition = useEditorStore((s) => s.clearPendingJumpPosition);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -152,6 +154,15 @@ export function Editor() {
     }
     clearPendingJump();
   }, [pendingJump, body, clearPendingJump]);
+
+  useEffect(() => {
+    const view = viewRef.current;
+    if (!view || pendingJumpPosition === null) return;
+    const position = Math.max(0, Math.min(pendingJumpPosition, view.state.doc.length));
+    view.dispatch({ selection: { anchor: position }, scrollIntoView: true });
+    view.focus();
+    clearPendingJumpPosition();
+  }, [pendingJumpPosition, clearPendingJumpPosition]);
 
   return <div ref={containerRef} className="editor" />;
 }
