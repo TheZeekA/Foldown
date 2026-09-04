@@ -1,0 +1,68 @@
+/* Foldown monochrome theme tokens. Light is the base palette; dark overrides
+   apply for system dark mode and are re-applied for an explicit override so
+   a manual choice always wins over the system preference. */
+:root {
+  --color-bg: #fafafa;
+  --color-bg-elevated: #ffffff;
+  --color-text: #141414;
+  --color-text-muted: #6b6b6b;
+  --color-border: #e2e2e2;
+
+  --color-badge-fill: #141414;
+  --color-badge-glyph: #fafafa;
+
+  --color-selection: rgba(20, 20, 20, 0.08);
+  --color-selection-border: #141414;
+
+  --font-sans:
+    "Segoe UI", Inter, Avenir, Helvetica, Arial, sans-serif;
+  --font-mono:
+    "Cascadia Code", "Consolas", "SFMono-Regular", Menlo, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-bg: #141414;
+    --color-bg-elevated: #1c1c1c;
+    --color-text: #fafafa;
+    --color-text-muted: #a3a3a3;
+    --color-border: #2e2e2e;
+
+    --color-badge-fill: #fafafa;
+    --color-badge-glyph: #141414;
+
+    --color-selection: rgba(250, 250, 250, 0.1);
+    --color-selection-border: #fafafa;
+  }
+}
+
+:root[data-theme="dark"] {
+  --color-bg: #141414;
+  --color-bg-elevated: #1c1c1c;
+  --color-text: #fafafa;
+  --color-text-muted: #a3a3a3;
+  --color-border: #2e2e2e;
+
+  --color-badge-fill: #fafafa;
+  --color-badge-glyph: #141414;
+
+  --color-selection: rgba(250, 250, 250, 0.1);
+  --color-selection-border: #fafafa;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+}
+
+#root {
+  height: 100%;
+}
+
+* {
+  box-sizing: border-box;
+}

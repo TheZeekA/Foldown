@@ -1,0 +1,127 @@
+.preview {
+  height: 100%;
+  overflow-y: auto;
+  background-color: var(--color-bg);
+}
+
+.preview__body {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 1.5rem 2rem 3rem;
+  color: var(--color-text);
+  font-size: 0.95rem;
+  line-height: 1.65;
+}
+
+.preview__body h1,
+.preview__body h2,
+.preview__body h3,
+.preview__body h4,
+.preview__body h5,
+.preview__body h6 {
+  margin: 1.4em 0 0.5em;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.preview__body h1 {
+  font-size: 1.7em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.preview__body h2 {
+  font-size: 1.35em;
+  padding-bottom: 0.25em;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.preview__body h3 {
+  font-size: 1.1em;
+}
+
+.preview__body p {
+  margin: 0.7em 0;
+}
+
+.preview__body a {
+  color: var(--color-text);
+  text-decoration: underline;
+  text-decoration-color: var(--color-text-muted);
+}
+
+.preview__body ul,
+.preview__body ol {
+  margin: 0.6em 0;
+  padding-left: 1.6em;
+}
+
+.preview__body li {
+  margin: 0.25em 0;
+}
+
+.preview__body li.task-list-item {
+  list-style: none;
+  margin-left: -1.4em;
+}
+
+.preview__body li.task-list-item input[type="checkbox"] {
+  margin-right: 0.5em;
+}
+
+.preview__body blockquote {
+  margin: 0.8em 0;
+  padding: 0.1em 1em;
+  border-left: 3px solid var(--color-border);
+  color: var(--color-text-muted);
+}
+
+.preview__body code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background-color: var(--color-selection);
+  padding: 0.15em 0.35em;
+  border-radius: 4px;
+}
+
+.preview__body pre {
+  margin: 0.8em 0;
+  padding: 0.9em 1em;
+  overflow-x: auto;
+  background-color: var(--color-selection);
+  border-radius: 6px;
+}
+
+.preview__body pre code {
+  background: none;
+  padding: 0;
+}
+
+.preview__body table {
+  border-collapse: collapse;
+  margin: 0.8em 0;
+  width: 100%;
+  font-size: 0.9em;
+}
+
+.preview__body th,
+.preview__body td {
+  border: 1px solid var(--color-border);
+  padding: 0.4em 0.7em;
+  text-align: left;
+}
+
+.preview__body th {
+  font-weight: 600;
+  background-color: var(--color-bg-elevated);
+}
+
+.preview__body hr {
+  margin: 1.5em 0;
+  border: none;
+  border-top: 1px solid var(--color-border);
+}
+
+.preview__body img {
+  max-width: 100%;
+}

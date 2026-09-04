@@ -1,0 +1,94 @@
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.3rem 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-bg-elevated);
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+
+.toolbar__group {
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+.toolbar__divider {
+  width: 1px;
+  align-self: stretch;
+  margin: 0.3rem 0.35rem;
+  background-color: var(--color-border);
+}
+
+.toolbar__spacer {
+  flex: 1;
+}
+
+.toolbar__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.toolbar__button:hover:not(:disabled) {
+  background-color: var(--color-selection);
+}
+
+.toolbar__button:disabled {
+  color: var(--color-text-muted);
+  opacity: 0.4;
+  cursor: default;
+}
+
+.toolbar__button--active {
+  background-color: var(--color-selection);
+  color: var(--color-text);
+}
+
+.toolbar__group--modes {
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.toolbar__save-status {
+  margin-right: 0.6rem;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.toolbar__save-status--error {
+  color: var(--color-text);
+}
+
+.toolbar__md-guide-button {
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+  padding: 0.32rem 0.6rem;
+  border: 1px solid #4FA8E0;
+  border-radius: 6px;
+  background: #5AC8FA;
+  color: #04283d;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.toolbar__md-guide-button:hover {
+  background: #3fb8f5;
+  border-color: #2e9fdb;
+}

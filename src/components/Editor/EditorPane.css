@@ -1,0 +1,67 @@
+.editor-pane {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.editor-pane__banner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.82rem;
+  color: var(--color-text);
+  background-color: var(--color-selection);
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.editor-pane__banner-button {
+  padding: 0.2rem 0.6rem;
+  font-size: 0.8rem;
+  font-family: inherit;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background-color: var(--color-bg-elevated);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.editor-pane__banner-button:hover {
+  background-color: var(--color-bg);
+}
+
+.editor-pane__body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+.editor-pane__source {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.editor-pane__resize-handle {
+  flex: 0 0 7px;
+  margin: 0 -3px;
+  z-index: 2;
+  cursor: col-resize;
+}
+
+.editor-pane__resize-handle:hover {
+  background: var(--color-selection-border);
+  opacity: 0.45;
+}
+
+.editor-pane__body[data-mode="split"] .editor-pane__source {
+  border-right: 1px solid var(--color-border);
+}
+
+.editor-pane__preview {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}

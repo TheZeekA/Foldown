@@ -1,0 +1,24 @@
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.brand-mark__badge {
+  flex-shrink: 0;
+}
+
+.brand-mark__fill {
+  fill: var(--color-badge-fill);
+}
+
+.brand-mark__glyph {
+  fill: var(--color-badge-glyph);
+}
+
+.brand-mark__wordmark {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: -0.01em;
+}

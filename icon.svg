@@ -1,0 +1,10 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background badge -->
+  <rect x="10" y="10" width="236" height="236" rx="52" fill="#141414"/>
+
+  <!-- Hash mark, custom-drawn for crisp geometry at small sizes -->
+  <rect x="82"  y="60"  width="28" height="136" rx="6" fill="#FAFAFA"/>
+  <rect x="146" y="60"  width="28" height="136" rx="6" fill="#FAFAFA"/>
+  <rect x="60"  y="82"  width="136" height="28" rx="6" fill="#FAFAFA"/>
+  <rect x="60"  y="146" width="136" height="28" rx="6" fill="#FAFAFA"/>
+</svg>
