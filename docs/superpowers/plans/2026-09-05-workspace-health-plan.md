@@ -70,7 +70,7 @@
 - [ ] Add typed command tests and UI tests for tab switching, loading, empty, error, severity grouping, and file navigation.
 - [ ] Add a Sidebar Insights button that opens the panel without replacing the current editor or workspace tree state.
 - [ ] Render Health findings grouped by category with severity labels and affected paths.
-- [ ] Render the Links and Tags panels from the shared APIs created by their plans.
+- [ ] Render the `LinksPanel` and `TagsPanel` from the shared APIs created by their plans.
 - [ ] Refresh insights after workspace/file watcher refreshes and after opening a different document.
 - [ ] Run `npm test`, `npm run build`, and `cargo test`; commit with `git add src/features/Insights src/components/Sidebar/Sidebar.tsx src/lib src-tauri/src/commands src-tauri/src/lib.rs && git commit -m "feat: add workspace insights panel"`.
 

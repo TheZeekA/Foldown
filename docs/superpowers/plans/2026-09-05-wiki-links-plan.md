@@ -55,10 +55,10 @@
 
 **Files:**
 - Create: `src/features/Insights/LinksPanel.tsx`
+- Create: `src-tauri/src/commands/knowledge.rs`
 - Create: `src/features/Insights/InsightsPanel.css`
 - Modify: `src/lib/types.ts`
 - Modify: `src/lib/tauriApi.ts`
-- Modify: `src-tauri/src/commands/knowledge.rs`
 - Modify: `src-tauri/src/commands/mod.rs`
 - Modify: `src-tauri/src/lib.rs`
 - Modify: `src/components/Editor/EditorPane.tsx`
@@ -69,7 +69,7 @@
 - `WorkspaceLinks = { backlinks: LinkRecord[]; outgoing: LinkRecord[]; unresolved: LinkRecord[] }`.
 
 - [ ] Add wrapper and Rust command tests for active-workspace containment and typed serialization.
-- [ ] Implement the query command and Links tab with loading, empty, unresolved, and error states.
+- [ ] Implement the query commands in the new `knowledge.rs` module and the Links tab with loading, empty, unresolved, and error states.
 - [ ] Use `openFile(record.resolvedPath, workspaceRoot)` when a resolved link/backlink is clicked.
 - [ ] Run `npm test`, `npm run build`, and `cargo test`; commit with `git add src/features/Insights src/lib src-tauri/src/commands src-tauri/src/lib.rs src/components/Editor/EditorPane.tsx && git commit -m "feat: add wiki links and backlinks view"`.
 

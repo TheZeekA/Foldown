@@ -53,7 +53,7 @@
 ### Task 3: Tags UI and API
 
 **Files:**
-- Modify: `src/features/Insights/InsightsPanel.tsx`
+- Create: `src/features/Insights/TagsPanel.tsx`
 - Modify: `src/features/Insights/InsightsPanel.css`
 - Modify: `src/lib/types.ts`
 - Modify: `src/lib/tauriApi.ts`
@@ -65,7 +65,7 @@
 - `getFilesForTag(workspaceRoot: string, tag: string): Promise<string[]>`.
 
 - [ ] Add typed invoke tests and UI tests for empty/loading/error states and tag selection.
-- [ ] Render alphabetical tag counts; selecting a tag shows matching files and opens a selected file through `openFile`.
+- [ ] Render alphabetical tag counts in `TagsPanel`; selecting a tag shows matching files and opens a selected file through `openFile`.
 - [ ] Ensure tag values are displayed in normalized form while source files remain unchanged.
 - [ ] Run `npm test`, `npm run build`, and `cargo test`; commit with `git add src/features/Insights src/lib src-tauri/src/commands && git commit -m "feat: add workspace tag browser"`.
 
