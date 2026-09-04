@@ -61,6 +61,10 @@ export function importImageAsset(sourcePath: string, markdownPath: string, works
   return invoke<string>("import_image_asset", { sourcePath, markdownPath, workspaceRoot });
 }
 
+export function importImageAssetBytes(fileName: string, contents: number[], markdownPath: string, workspaceRoot: string): Promise<string> {
+  return invoke<string>("import_image_asset_bytes", { fileName, contents, markdownPath, workspaceRoot });
+}
+
 export function takePendingOpen(): Promise<string | null> {
   return invoke<string | null>("take_pending_open");
 }

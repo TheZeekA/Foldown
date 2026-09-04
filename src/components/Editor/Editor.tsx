@@ -5,7 +5,7 @@ import { markdown } from "@codemirror/lang-markdown";
 import { languages } from "@codemirror/language-data";
 import { useEditorStore } from "../../stores/editor";
 import "./Editor.css";
-import { importImageAsset } from "../../lib/tauriApi";
+import { importImageAsset, importImageAssetBytes } from "../../lib/tauriApi";
 import { buildImageMarkdown, isSupportedImagePath } from "./imageDrop";
 import { message } from "@tauri-apps/plugin-dialog";
 
@@ -183,12 +183,10 @@ export function Editor() {
     event.preventDefault();
     event.stopPropagation();
     if (!openPath || !workspaceRoot) return;
-    if (!image.path) {
-      await message("Foldown could not access the dropped image path. Try dragging the image directly from File Explorer.", { title: "Foldown", kind: "error" });
-      return;
-    }
     try {
-      const assetPath = await importImageAsset(image.path, openPath, workspaceRoot);
+      const assetPath = image.path
+        ? await importImageAsset(image.path, openPath, workspaceRoot)
+        : await importImageAssetBytes(image.name, Array.from(new Uint8Array(await image.arrayBuffer())), openPath, workspaceRoot);
       const position = selectionRange?.to ?? 0;
       replaceRange(position, position, `${buildImageMarkdown(assetPath)}\n`);
     } catch (error) {

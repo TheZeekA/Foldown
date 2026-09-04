@@ -221,28 +221,36 @@ pub fn import_image_asset(source: &Path, workspace_root: &Path) -> AppResult<Pat
     if !source.is_file() {
         return Err(AppError::Message(format!("\"{}\" is not a file", source.display())));
     }
-    let extension = source.extension().and_then(|value| value.to_str()).unwrap_or_default();
+    let name = source.file_name().ok_or_else(|| AppError::Message("Source file has no name".to_string()))?;
+    let candidate = image_asset_destination(Path::new(name), workspace_root)?;
+    fs::copy(source, &candidate)?;
+    Ok(candidate)
+}
+
+pub fn import_image_asset_bytes(file_name: &str, contents: &[u8], workspace_root: &Path) -> AppResult<PathBuf> {
+    let name = Path::new(file_name).file_name().ok_or_else(|| AppError::Message("Image has no name".to_string()))?;
+    let candidate = image_asset_destination(Path::new(name), workspace_root)?;
+    fs::write(&candidate, contents)?;
+    Ok(candidate)
+}
+
+fn image_asset_destination(name: &Path, workspace_root: &Path) -> AppResult<PathBuf> {
+    let extension = name.extension().and_then(|value| value.to_str()).unwrap_or_default();
     if !matches!(extension.to_ascii_lowercase().as_str(), "png" | "jpg" | "jpeg" | "gif" | "webp" | "svg") {
         return Err(AppError::Message("Only PNG, JPG, JPEG, GIF, WebP, and SVG images are supported".to_string()));
     }
-    let name = source.file_name().ok_or_else(|| AppError::Message("Source file has no name".to_string()))?;
     let assets = workspace_root.join("assets");
     fs::create_dir_all(&assets)?;
     let original = assets.join(name);
-    let candidate = if !original.exists() {
-        original
-    } else {
-        let stem = source.file_stem().unwrap_or_default().to_string_lossy();
-        let ext = source.extension().unwrap_or_default().to_string_lossy();
-        let mut n = 1;
-        let mut candidate = assets.join(format!("{stem}-{n}.{ext}"));
-        while candidate.exists() {
-            n += 1;
-            candidate = assets.join(format!("{stem}-{n}.{ext}"));
-        }
-        candidate
-    };
-    fs::copy(source, &candidate)?;
+    if !original.exists() { return Ok(original); }
+    let stem = name.file_stem().unwrap_or_default().to_string_lossy();
+    let ext = name.extension().unwrap_or_default().to_string_lossy();
+    let mut n = 1;
+    let mut candidate = assets.join(format!("{stem}-{n}.{ext}"));
+    while candidate.exists() {
+        n += 1;
+        candidate = assets.join(format!("{stem}-{n}.{ext}"));
+    }
     Ok(candidate)
 }
 
@@ -509,6 +517,14 @@ mod tests {
 
         assert!(import_image_asset(&source, &workspace).is_err());
         assert!(!workspace.join("assets").exists());
+    }
+
+    #[test]
+    fn import_image_asset_bytes_creates_the_asset_without_a_source_path() {
+        let workspace = temp_dir();
+        let imported = import_image_asset_bytes("photo.jpg", b"image bytes", &workspace).unwrap();
+        assert_eq!(imported.strip_prefix(&workspace).unwrap(), Path::new("assets/photo.jpg"));
+        assert_eq!(fs::read(imported).unwrap(), b"image bytes");
     }
 
     #[test]
