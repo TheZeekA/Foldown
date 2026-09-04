@@ -8,5 +8,7 @@ export function isSupportedImagePath(path: string): boolean {
 export function buildImageMarkdown(assetPath: string): string {
   const filename = assetPath.split(/[\\/]/).pop() ?? assetPath;
   const stem = filename.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ").trim() || "image";
-  return `![${stem}](${assetPath.replace(/\\/g, "/")})`;
+  const normalizedPath = assetPath.replace(/\\/g, "/");
+  const destination = /\s/.test(normalizedPath) ? `<${normalizedPath}>` : normalizedPath;
+  return `![${stem}](${destination})`;
 }

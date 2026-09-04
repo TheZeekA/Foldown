@@ -76,8 +76,9 @@ fn read_dir_nodes(dir: &Path, show_all_files: bool) -> Vec<TreeNode> {
                         .all(|e| e.file_name().to_string_lossy().starts_with('.'))
                 })
                 .unwrap_or(true);
-            let children = read_dir_nodes(&path, show_all_files);
-            if show_all_files || !children.is_empty() || is_truly_empty {
+            let is_assets = name.eq_ignore_ascii_case("assets");
+            let children = read_dir_nodes(&path, show_all_files || is_assets);
+            if show_all_files || is_assets || !children.is_empty() || is_truly_empty {
                 folders.push(TreeNode::Folder {
                     name,
                     path: display_path(&path),
@@ -148,7 +149,7 @@ mod tests {
 
         let tree = build_tree(&root, false);
 
-        // "assets" has no markdown files, so it should be pruned entirely.
+        // The assets folder remains visible so imported images are discoverable.
         let names: Vec<&str> = tree
             .iter()
             .map(|n| match n {
@@ -156,7 +157,7 @@ mod tests {
                 TreeNode::Folder { name, .. } => name.as_str(),
             })
             .collect();
-        assert_eq!(names, vec!["journal", "notes.md"]);
+        assert_eq!(names, vec!["assets", "journal", "notes.md"]);
     }
 
     #[test]
