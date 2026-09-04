@@ -1,6 +1,6 @@
-import { lazy, Suspense, useEffect, useRef } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { listen } from "@tauri-apps/api/event";
-import { confirm, message } from "@tauri-apps/plugin-dialog";
+import { message } from "@tauri-apps/plugin-dialog";
 import "./styles/theme.css";
 import "./App.css";
 import { BrandMark } from "./components/BrandMark";
@@ -13,7 +13,6 @@ import { openExternalFile } from "./lib/externalOpen";
 import { takePendingOpen, watchWorkspace } from "./lib/tauriApi";
 import { InteractiveModePanel } from "./features/InteractiveMode/InteractiveModePanel";
 import { useInteractiveModeStore } from "./stores/interactiveMode";
-import { checkForUpdate, formatUpdateDetails, installUpdate } from "./lib/updater";
 
 const EditorPane = lazy(() => import("./components/Editor/EditorPane"));
 const OPEN_FILE_REQUEST_EVENT = "open-file-request";
@@ -24,28 +23,6 @@ function App() {
   const openPath = useEditorStore((s) => s.openPath);
   const initSettings = useSettingsStore((s) => s.init);
   const aiOpen = useInteractiveModeStore((s) => s.isOpen);
-  const updateCheckStarted = useRef(false);
-
-  useEffect(() => {
-    if (updateCheckStarted.current) return;
-    updateCheckStarted.current = true;
-    void (async () => {
-      try {
-        const update = await checkForUpdate();
-        if (!update) return;
-        const shouldInstall = await confirm(formatUpdateDetails(update), {
-          title: "Foldown update available",
-          kind: "info",
-          okLabel: "Install update",
-          cancelLabel: "Later",
-        });
-        if (shouldInstall) await installUpdate(update);
-      } catch {
-        // Background update checks are deliberately silent when unavailable.
-      }
-    })();
-  }, []);
-
   useEffect(() => {
     (async () => {
       await init();

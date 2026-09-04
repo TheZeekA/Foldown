@@ -8,7 +8,7 @@
 
 Foldown keeps your notes as ordinary `.md` files on disk. There is no account, cloud storage, proprietary document format, or database lock-in. Open the same files in any other Markdown editor whenever you want.
 
- **Foldown 1.2.2 is the current production release.** Download the installer or standalone Windows executable from the [GitHub Releases page](https://github.com/TheZeekA/foldown/releases/latest).
+ **Foldown 1.2.3 is the current production release.** Download the installer or standalone Windows executable from the [GitHub Releases page](https://github.com/TheZeekA/foldown/releases/latest).
 
 ## Features
 
@@ -314,7 +314,7 @@ foldown/
 
 ## Status
 
- Foldown 1.2.2 is the current production release. Interactive Mode supports local and private-network OpenAI-compatible servers alongside direct integrations with ChatGPT, Claude, and Gemini. Retrieval (chunking, embedding, and reranking) always runs locally regardless of which chat provider is active.
+ Foldown 1.2.3 is the current production release. Interactive Mode supports local and private-network OpenAI-compatible servers alongside direct integrations with ChatGPT, Claude, and Gemini. Retrieval (chunking, embedding, and reranking) always runs locally regardless of which chat provider is active. Updates are published through GitHub Releases.
 
 ## License and assets
 
