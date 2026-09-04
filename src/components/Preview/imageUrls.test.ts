@@ -10,4 +10,8 @@ describe("local preview image paths", () => {
     expect(resolveLocalImagePath("https://example.com/image.png", "note.md", "C:/workspace")).toBeNull();
     expect(resolveLocalImagePath("../../outside.png", "docs/note.md", "C:/workspace")).toBeNull();
   });
+
+  it("decodes URL-escaped spaces in local asset paths", () => {
+    expect(resolveLocalImagePath("assets/Screenshot%202026.png", "note.md", "C:/workspace")).toBe("C:/workspace/assets/Screenshot 2026.png");
+  });
 });

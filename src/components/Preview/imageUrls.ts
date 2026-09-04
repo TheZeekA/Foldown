@@ -18,7 +18,9 @@ function normalizeSegments(path: string): string | null {
 export function resolveLocalImagePath(src: string, markdownPath: string, workspaceRoot: string): string | null {
   const value = src.trim();
   if (!value || /^(?:[a-z][a-z\d+.-]*:|#|\/\/)/i.test(value)) return null;
-  const withoutQuery = value.split(/[?#]/, 1)[0] ?? "";
+  const encodedPath = value.split(/[?#]/, 1)[0] ?? "";
+  let withoutQuery = encodedPath;
+  try { withoutQuery = decodeURIComponent(encodedPath); } catch { /* retain the original path */ }
   const root = normalizeSegments(workspaceRoot);
   const markdown = normalizeSegments(markdownPath);
   if (!root || !markdown) return null;

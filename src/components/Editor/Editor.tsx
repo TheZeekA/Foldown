@@ -6,7 +6,7 @@ import { languages } from "@codemirror/language-data";
 import { useEditorStore } from "../../stores/editor";
 import "./Editor.css";
 import { importImageAsset, importImageAssetBytes } from "../../lib/tauriApi";
-import { buildImageMarkdown, isSupportedImagePath } from "./imageDrop";
+import { buildImageMarkdown, buildImageMarkdownForDocument, isSupportedImagePath } from "./imageDrop";
 import { message } from "@tauri-apps/plugin-dialog";
 
 /** Tags a programmatic full-doc replace (file load/switch/reload) so the update
@@ -179,16 +179,20 @@ export function Editor() {
   const handleDrop = async (event: React.DragEvent<HTMLDivElement>) => {
     const dropped = Array.from(event.dataTransfer.files) as Array<File & { path?: string }>;
     const image = dropped.find((file) => isSupportedImagePath(file.path ?? file.name));
-    if (!image) return;
+    const internalAssetPath = event.dataTransfer.getData("text/plain");
+    const isInternalImage = isSupportedImagePath(internalAssetPath);
+    if (!image && !isInternalImage) return;
     event.preventDefault();
     event.stopPropagation();
     if (!openPath || !workspaceRoot) return;
     try {
-      const assetPath = image.path
-        ? await importImageAsset(image.path, openPath, workspaceRoot)
-        : await importImageAssetBytes(image.name, Array.from(new Uint8Array(await image.arrayBuffer())), openPath, workspaceRoot);
+      const markdown = isInternalImage
+        ? buildImageMarkdownForDocument(internalAssetPath, openPath, workspaceRoot)
+        : buildImageMarkdown(image!.path
+          ? await importImageAsset(image!.path, openPath, workspaceRoot)
+          : await importImageAssetBytes(image!.name, Array.from(new Uint8Array(await image!.arrayBuffer())), openPath, workspaceRoot));
       const position = selectionRange?.to ?? 0;
-      replaceRange(position, position, `${buildImageMarkdown(assetPath)}\n`);
+      replaceRange(position, position, `${markdown}\n`);
     } catch (error) {
       await message(`Could not import image: ${String(error)}`, { title: "Foldown", kind: "error" });
     }

@@ -12,3 +12,19 @@ export function buildImageMarkdown(assetPath: string): string {
   const destination = /\s/.test(normalizedPath) ? `<${normalizedPath}>` : normalizedPath;
   return `![${stem}](${destination})`;
 }
+
+export function buildImageMarkdownForDocument(assetPath: string, markdownPath: string, workspaceRoot: string): string {
+  const asset = assetPath.replace(/\\/g, "/");
+  const root = workspaceRoot.replace(/\\/g, "/").replace(/\/$/, "");
+  const document = markdownPath.replace(/\\/g, "/");
+  const assetRelative = asset.toLowerCase().startsWith(`${root.toLowerCase()}/`) ? asset.slice(root.length + 1) : asset;
+  const documentRelative = document.toLowerCase().startsWith(`${root.toLowerCase()}/`) ? document.slice(root.length + 1) : document;
+  const fromParts = documentRelative.split("/").slice(0, -1).filter(Boolean);
+  const targetParts = assetRelative.split("/").filter(Boolean);
+  while (fromParts.length && targetParts.length && fromParts[0].toLowerCase() === targetParts[0].toLowerCase()) {
+    fromParts.shift();
+    targetParts.shift();
+  }
+  const relative = `${[...fromParts.map(() => ".."), ...targetParts].join("/")}` || assetRelative;
+  return buildImageMarkdown(relative);
+}
