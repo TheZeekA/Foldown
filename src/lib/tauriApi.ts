@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { confirm, open, save } from "@tauri-apps/plugin-dialog";
-import type { AiChatMessage, AiChatResult, AiProvider, AiServerProbe, AiSettings, BulkConvertResult, EditorFont, HistoryEntry, RecentWorkspace, SearchResult, SelectionAiAction, SelectionAiResult, ThemeMode, TreeNode } from "./types";
+import type { AiChatMessage, AiChatResult, AiProvider, AiServerProbe, AiSettings, BulkConvertResult, EditorFont, HealthFinding, HistoryEntry, RecentWorkspace, SearchResult, SelectionAiAction, SelectionAiResult, TagSummary, ThemeMode, TreeNode, WorkspaceLinks } from "./types";
 
 /** Typed wrappers around every Rust command — the one place the frontend talks to Tauri's invoke(). */
 
@@ -144,6 +144,22 @@ export function clearHistory(workspaceRoot: string, path?: string): Promise<void
 
 export function restoreHistorySnapshot(id: number, workspaceRoot: string, path: string, expectedCurrentContent: string): Promise<void> {
   return invoke<void>("restore_history_snapshot", { id, workspaceRoot, path, expectedCurrentContent });
+}
+
+export function getWorkspaceLinks(workspaceRoot: string, activePath: string | null): Promise<WorkspaceLinks> {
+  return invoke<WorkspaceLinks>("get_workspace_links", { workspaceRoot, activePath });
+}
+
+export function getWorkspaceTags(workspaceRoot: string): Promise<TagSummary[]> {
+  return invoke<TagSummary[]>("get_workspace_tags", { workspaceRoot });
+}
+
+export function getFilesForTag(workspaceRoot: string, tag: string): Promise<string[]> {
+  return invoke<string[]>("get_files_for_tag", { workspaceRoot, tag });
+}
+
+export function getWorkspaceHealth(workspaceRoot: string): Promise<HealthFinding[]> {
+  return invoke<HealthFinding[]>("get_workspace_health", { workspaceRoot });
 }
 
 export function rebuildAiIndex(workspaceRoot: string): Promise<void> {

@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::ai::context::{chunk_markdown, content_hash};
 use crate::error::AppResult;
+use crate::knowledge::{HealthFinding, LinkRecord, TagSummary, WorkspaceMetadata};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
@@ -255,6 +256,27 @@ impl KnowledgeIndex {
             conn.prepare("SELECT path FROM ai_documents WHERE workspace=?1 ORDER BY path")?;
         let rows = stmt.query_map(params![workspace], |row| row.get::<_, String>(0))?;
         Ok(rows.filter_map(Result::ok).collect())
+    }
+
+    pub fn workspace_metadata(&self, root: &Path) -> AppResult<WorkspaceMetadata> {
+        crate::knowledge::scan_workspace(root)
+    }
+
+    pub fn workspace_links(&self, root: &Path) -> AppResult<Vec<LinkRecord>> {
+        Ok(self.workspace_metadata(root)?.links)
+    }
+
+    pub fn workspace_tags(&self, root: &Path) -> AppResult<Vec<TagSummary>> {
+        Ok(self.workspace_metadata(root)?.tags)
+    }
+
+    pub fn files_for_tag(&self, root: &Path, tag: &str) -> AppResult<Vec<String>> {
+        let key = tag.trim().trim_start_matches('#').to_lowercase();
+        Ok(self.workspace_metadata(root)?.files_for_tag.remove(&key).unwrap_or_default())
+    }
+
+    pub fn workspace_health(&self, root: &Path) -> AppResult<Vec<HealthFinding>> {
+        Ok(self.workspace_metadata(root)?.health)
     }
 
     pub fn all_chunks(&self, root: &Path) -> AppResult<Vec<ContextChunk>> {

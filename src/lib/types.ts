@@ -98,6 +98,35 @@ export interface HistoryEntry {
   byteLength: number;
 }
 
+export type LinkStatus = "resolved" | "unresolved" | "ambiguous";
+
+export interface LinkRecord {
+  sourcePath: string;
+  rawTarget: string;
+  displayText: string;
+  resolvedPath: string | null;
+  status: LinkStatus;
+}
+
+export interface WorkspaceLinks {
+  backlinks: LinkRecord[];
+  outgoing: LinkRecord[];
+  unresolved: LinkRecord[];
+}
+
+export interface TagSummary {
+  tag: string;
+  count: number;
+}
+
+export interface HealthFinding {
+  category: string;
+  severity: string;
+  path: string;
+  message: string;
+  target: string | null;
+}
+
 export interface BulkConvertResult {
   source_path: string;
   dest_path: string | null;

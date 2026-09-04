@@ -1,0 +1,23 @@
+.insights { display: flex; flex: 1; min-height: 0; flex-direction: column; overflow: hidden; background: var(--color-bg); color: var(--color-text); }
+.insights__header { display: flex; justify-content: space-between; align-items: center; padding: 0.7rem; border-bottom: 1px solid var(--color-border); }
+.insights__header button { border: 0; background: transparent; color: var(--color-text-muted); font-size: 1.1rem; cursor: pointer; }
+.insights__tabs { display: flex; gap: 0.2rem; padding: 0.45rem; border-bottom: 1px solid var(--color-border); }
+.insights__tabs button { flex: 1; padding: 0.35rem; border: 0; border-radius: 4px; background: transparent; color: var(--color-text-muted); font: inherit; font-size: 0.78rem; cursor: pointer; }
+.insights__tabs button:hover, .insights__tab--active { background: var(--color-selection) !important; color: var(--color-text) !important; }
+.insights__body { min-height: 0; overflow: auto; padding: 0.65rem; }
+.insights__sections { display: flex; flex-direction: column; gap: 1rem; }
+.insights__sections h3 { margin: 0 0 0.35rem; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-text-muted); }
+.insights__list, .insights__tag-list, .insights__health-list { margin: 0; padding: 0; list-style: none; }
+.insights__list li + li, .insights__health-list li + li { border-top: 1px solid var(--color-border); }
+.insights__list button, .insights__list span { display: flex; width: 100%; flex-direction: column; gap: 0.15rem; padding: 0.45rem 0.25rem; border: 0; background: transparent; color: var(--color-text); font: inherit; font-size: 0.78rem; text-align: left; cursor: pointer; }
+.insights__list button:hover { background: var(--color-selection); }
+.insights__list small, .insights__health-list small { color: var(--color-text-muted); font-size: 0.68rem; overflow-wrap: anywhere; }
+.insights__tag-list button { display: flex; width: 100%; justify-content: space-between; padding: 0.4rem; border: 0; background: transparent; color: var(--color-text); font: inherit; font-size: 0.8rem; text-align: left; cursor: pointer; }
+.insights__tag-list button:hover, .insights__tag--selected { background: var(--color-selection) !important; }
+.insights__tag-list span { color: var(--color-text-muted); }
+.insights__empty, .insights__error { margin: 0.5rem 0; color: var(--color-text-muted); font-size: 0.78rem; line-height: 1.45; }
+.insights__error { color: var(--color-text); }
+.insights__health-list li { display: flex; flex-direction: column; gap: 0.2rem; padding: 0.55rem 0.25rem; font-size: 0.76rem; }
+.insights__severity { width: fit-content; padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.62rem; text-transform: uppercase; }
+.insights__severity--warning { background: #d99b2b33; color: #d99b2b; }
+.insights__severity--error { background: #d9534f33; color: #d9534f; }

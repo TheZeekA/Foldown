@@ -14,6 +14,7 @@ import { getAiSettings } from "../../lib/tauriApi";
 import { activeProviderConfig } from "../../lib/aiProviderConfig";
 import { buildRecentWorkspaceMenu } from "./workspaceMenu";
 import { clampRange } from "../../lib/layout";
+import { InsightsPanel } from "../../features/Insights/InsightsPanel";
 
 interface MenuState {
   x: number;
@@ -50,6 +51,7 @@ export function Sidebar() {
   const [settingsPage, setSettingsPage] = useState<SettingsPageId | null>(null);
   const [noAiConfigured, setNoAiConfigured] = useState(false);
   const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
+  const [insightsOpen, setInsightsOpen] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(260);
   const sidebarResizeRef = useRef<{ startX: number; startWidth: number } | null>(null);
   const workspaceSwitcherRef = useRef<HTMLDivElement>(null);
@@ -142,7 +144,7 @@ export function Sidebar() {
         <div className="sidebar__header-actions">
           <button
             className={`sidebar__icon-button${searchOpen ? " sidebar__icon-button--active" : ""}`}
-            onClick={() => (searchOpen ? closeSearch() : openSearch())}
+            onClick={() => { setInsightsOpen(false); searchOpen ? closeSearch() : openSearch(); }}
             title="Search workspace"
             aria-pressed={searchOpen}
           >
@@ -151,6 +153,7 @@ export function Sidebar() {
               <line x1="12.2" y1="12.2" x2="16" y2="16" />
             </svg>
           </button>
+          <button className={`sidebar__icon-button${insightsOpen ? " sidebar__icon-button--active" : ""}`} onClick={() => { closeSearch(); setInsightsOpen((open) => !open); }} title="Workspace insights" aria-pressed={insightsOpen}>Info</button>
           <button
             className={`sidebar__icon-button${showAllFiles ? " sidebar__icon-button--active" : ""}`}
             onClick={toggleShowAllFiles}
@@ -238,7 +241,9 @@ export function Sidebar() {
         <div><button onClick={() => { setNoAiConfigured(false); setSettingsPage("ai"); }}>Open Settings</button><button onClick={() => setNoAiConfigured(false)}>Cancel</button></div>
       </div></div>}
 
-      {searchOpen ? (
+      {insightsOpen ? (
+        <InsightsPanel onClose={() => setInsightsOpen(false)} />
+      ) : searchOpen ? (
         <SearchPanel />
       ) : (
         <div

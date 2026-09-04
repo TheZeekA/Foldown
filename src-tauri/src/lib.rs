@@ -4,6 +4,7 @@ mod convert;
 mod error;
 mod fs;
 mod history;
+mod knowledge;
 mod native;
 mod search;
 mod settings;
@@ -122,6 +123,10 @@ pub fn run() {
             commands::history::delete_history_snapshot,
             commands::history::clear_history,
             commands::history::restore_history_snapshot,
+            commands::knowledge::get_workspace_links,
+            commands::knowledge::get_workspace_tags,
+            commands::knowledge::get_files_for_tag,
+            commands::knowledge::get_workspace_health,
             commands::search::index_workspace,
             commands::search::search_workspace,
             commands::convert::convert_document,
