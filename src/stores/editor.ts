@@ -23,6 +23,7 @@ interface EditorState {
   loading: boolean;
   error: string | null;
   view: EditorView | null;
+  selectionRange: { from: number; to: number } | null;
   viewMode: ViewMode;
   dirty: boolean;
   saveStatus: SaveStatus;
@@ -41,6 +42,8 @@ interface EditorState {
   resetForWorkspace: () => Promise<void>;
   setBody: (value: string) => void;
   setView: (view: EditorView | null) => void;
+  setSelectionRange: (range: { from: number; to: number } | null) => void;
+  replaceRange: (from: number, to: number, replacement: string) => void;
   setViewMode: (mode: ViewMode) => void;
   saveNow: (force?: boolean) => Promise<void>;
   reloadFromDisk: () => Promise<void>;
@@ -74,6 +77,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   loading: false,
   error: null,
   view: null,
+  selectionRange: null,
   viewMode: "source",
   dirty: false,
   saveStatus: "idle",
@@ -168,6 +172,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       externalChange: false,
       pendingJump: null,
       pendingJumpPosition: null,
+      selectionRange: null,
       // Invalidate any openFile still in flight so it can't repopulate the
       // editor with the old workspace's content after this reset.
       requestSeq: s.requestSeq + 1,
@@ -186,6 +191,16 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   setView: (view) => set({ view }),
+  setSelectionRange: (selectionRange) => set({ selectionRange }),
+  replaceRange: (from, to, replacement) => {
+    const view = get().view;
+    if (!view) return;
+    view.dispatch({
+      changes: { from, to, insert: replacement },
+      selection: { anchor: from, head: from + replacement.length },
+      userEvent: "input",
+    });
+  },
   setViewMode: (viewMode) => set({ viewMode }),
 
   saveNow: async (force = false) => {

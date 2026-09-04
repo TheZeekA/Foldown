@@ -55,6 +55,13 @@ pub struct AiChatResult {
     pub applied_paths: Vec<String>,
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SelectionAiResult {
+    pub text: String,
+    pub citations: Vec<ContextChunk>,
+}
+
 struct ActiveDocument {
     relative_path: String,
     content: String,
@@ -393,6 +400,29 @@ async fn dispatch_chat(
     }
 }
 
+async fn dispatch_plain_chat(
+    window: &Window,
+    request_id: &str,
+    settings: &crate::settings::store::AiSettings,
+    request_messages: &[ChatMessage],
+) -> AppResult<String> {
+    let on_delta = |delta: &str| {
+        let _ = window.emit(
+            "ai-chat-delta",
+            DeltaEvent {
+                request_id: request_id.to_string(),
+                delta: delta.to_string(),
+            },
+        );
+    };
+    match settings.provider {
+        AiProvider::Local => client::send_chat(settings, request_messages, on_delta).await,
+        AiProvider::Openai => Ok(providers::openai::send_chat(&settings.openai, request_messages, on_delta).await?.text),
+        AiProvider::Anthropic => Ok(providers::anthropic::send_chat(&settings.anthropic, request_messages, on_delta).await?.text),
+        AiProvider::Gemini => Ok(providers::gemini::send_chat(&settings.gemini, request_messages, on_delta).await?.text),
+    }
+}
+
 #[tauri::command]
 pub async fn send_ai_message(
     window: Window,
@@ -480,6 +510,63 @@ pub async fn send_ai_message(
         proposals: confirm_proposals,
         applied_paths,
     })
+}
+
+#[tauri::command]
+pub async fn run_selection_ai(
+    window: Window,
+    store: State<'_, SettingsStore>,
+    index: State<'_, KnowledgeIndex>,
+    runtime: State<'_, AiRuntime>,
+    active: State<'_, ActiveWorkspace>,
+    workspace_root: String,
+    request_id: String,
+    action: String,
+    selected_text: String,
+    active_path: String,
+) -> AppResult<SelectionAiResult> {
+    let selected_text = selected_text.trim();
+    if selected_text.is_empty() {
+        return Err(AppError::Message("Select some text before using an AI action".to_string()));
+    }
+    let settings = store.get_ai_settings()?;
+    let active_chat_model = match settings.provider {
+        AiProvider::Local => &settings.local.chat_model,
+        AiProvider::Openai => &settings.openai.chat_model,
+        AiProvider::Anthropic => &settings.anthropic.chat_model,
+        AiProvider::Gemini => &settings.gemini.chat_model,
+    };
+    if active_chat_model.trim().is_empty() {
+        return Err(AppError::Message("Choose a chat model in Interactive Mode settings".to_string()));
+    }
+    let root = active.require(Path::new(&workspace_root))?;
+    index.sync_workspace(&root)?;
+    let citations = retrieve_context(&index, &root, selected_text, &settings).await?;
+    let active_document = load_active_document(&root, Some(&active_path))?;
+    let all_paths = index.all_document_paths(&root)?;
+    let mut system = build_system_prompt(&citations, active_document.as_ref(), &all_paths);
+    system.push_str(
+        "\nSELECTION MODE: Return only the proposed text or explanation for the selected passage. Do not create, replace, delete, or modify files, and do not emit a Foldown action block. The application will show your response as a proposal for the selected text.\n",
+    );
+    let request_messages = vec![
+        ChatMessage { role: "system".to_string(), content: system },
+        ChatMessage {
+            role: "user".to_string(),
+            content: format!("Action: {action}\n\nSelected Markdown:\n---\n{selected_text}\n---"),
+        },
+    ];
+    let token = CancellationToken::new();
+    runtime.requests.lock().unwrap().insert(request_id.clone(), token.clone());
+    let response = tokio::select! {
+        value = dispatch_plain_chat(&window, &request_id, &settings, &request_messages) => value,
+        _ = token.cancelled() => Err(AppError::Message("AI request cancelled".to_string())),
+    };
+    runtime.requests.lock().unwrap().remove(&request_id);
+    let text = response?.trim().to_string();
+    if text.is_empty() {
+        return Err(AppError::Message("The AI returned an empty response".to_string()));
+    }
+    Ok(SelectionAiResult { text, citations })
 }
 
 #[tauri::command]

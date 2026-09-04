@@ -83,6 +83,13 @@ export interface AiChatResult {
   appliedPaths: string[];
 }
 
+export type SelectionAiAction = "explain" | "summarize" | "rewrite" | "clarify" | "checklist" | "action-items" | "translate";
+
+export interface SelectionAiResult {
+  text: string;
+  citations: AiContextChunk[];
+}
+
 export interface BulkConvertResult {
   source_path: string;
   dest_path: string | null;

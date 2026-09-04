@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { confirm, open, save } from "@tauri-apps/plugin-dialog";
-import type { AiChatMessage, AiChatResult, AiProvider, AiServerProbe, AiSettings, BulkConvertResult, EditorFont, RecentWorkspace, SearchResult, ThemeMode, TreeNode } from "./types";
+import type { AiChatMessage, AiChatResult, AiProvider, AiServerProbe, AiSettings, BulkConvertResult, EditorFont, RecentWorkspace, SearchResult, SelectionAiAction, SelectionAiResult, ThemeMode, TreeNode } from "./types";
 
 /** Typed wrappers around every Rust command — the one place the frontend talks to Tauri's invoke(). */
 
@@ -104,6 +104,22 @@ export function sendAiMessage(workspaceRoot: string, requestId: string, messages
 
 export function cancelAiRequest(requestId: string): Promise<void> {
   return invoke<void>("cancel_ai_request", { requestId });
+}
+
+export function runSelectionAi(
+  workspaceRoot: string,
+  requestId: string,
+  action: SelectionAiAction,
+  selectedText: string,
+  activePath: string,
+): Promise<SelectionAiResult> {
+  return invoke<SelectionAiResult>("run_selection_ai", {
+    workspaceRoot,
+    requestId,
+    action,
+    selectedText,
+    activePath,
+  });
 }
 
 export function rebuildAiIndex(workspaceRoot: string): Promise<void> {

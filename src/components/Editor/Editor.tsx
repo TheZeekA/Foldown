@@ -60,6 +60,7 @@ export function Editor() {
   const reloadToken = useEditorStore((s) => s.reloadToken);
   const setBody = useEditorStore((s) => s.setBody);
   const setView = useEditorStore((s) => s.setView);
+  const setSelectionRange = useEditorStore((s) => s.setSelectionRange);
   const pendingJump = useEditorStore((s) => s.pendingJump);
   const clearPendingJump = useEditorStore((s) => s.clearPendingJump);
   const pendingJumpPosition = useEditorStore((s) => s.pendingJumpPosition);
@@ -78,6 +79,10 @@ export function Editor() {
           editorTheme,
           EditorView.updateListener.of((update) => {
             const isProgrammatic = update.transactions.some((tr) => tr.annotation(programmaticUpdate));
+            if (update.selectionSet || update.docChanged) {
+              const range = update.state.selection.main;
+              setSelectionRange({ from: range.from, to: range.to });
+            }
             if (update.docChanged && !isProgrammatic) {
               setBody(update.state.doc.toString());
             }

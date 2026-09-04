@@ -119,6 +119,7 @@ pub fn run() {
             commands::convert::bulk_convert_documents,
             commands::native::take_pending_open,
             ai::commands::send_ai_message,
+            ai::commands::run_selection_ai,
             ai::commands::cancel_ai_request,
             ai::commands::rebuild_ai_index,
             ai::commands::preview_ai_retrieval,

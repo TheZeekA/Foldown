@@ -35,6 +35,7 @@ describe("editor store", () => {
       requestSeq: 0,
       reloadToken: 0,
       pendingJumpPosition: null,
+      selectionRange: null,
     });
   });
 
@@ -55,6 +56,11 @@ describe("editor store", () => {
 
     useEditorStore.getState().clearPendingJumpPosition();
     expect(useEditorStore.getState().pendingJumpPosition).toBeNull();
+  });
+
+  it("stores the active editor selection range", () => {
+    useEditorStore.getState().setSelectionRange({ from: 3, to: 9 });
+    expect(useEditorStore.getState().selectionRange).toEqual({ from: 3, to: 9 });
   });
 
   it("a stale in-flight openFile can't resurrect content after a newer one wins", async () => {
