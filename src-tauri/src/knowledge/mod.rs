@@ -194,10 +194,16 @@ pub fn scan_markdown_references(source_relative: &Path, content: &str) -> Vec<Re
             let open = cursor + open;
             let Some(close) = line[open + 1..].find(')') else { break };
             let close = open + 1 + close;
+            let Some(label_end) = line[..open].chars().last() else { cursor = close + 1; continue };
+            if label_end != ']' { cursor = close + 1; continue; }
             let target = line[open + 1..close].split_whitespace().next().unwrap_or_default().trim_matches(['<', '>']);
             cursor = close + 1;
             if target.is_empty() || is_external(target) { continue; }
-            let kind = if line[..open].rfind("![").is_some_and(|marker| line[marker..open].contains(']')) { ReferenceKind::Image } else { ReferenceKind::MarkdownLink };
+            let kind = if line[..open].rfind("![").is_some_and(|marker| line[marker..open].contains(']')) {
+                ReferenceKind::Image
+            } else {
+                ReferenceKind::MarkdownLink
+            };
             let _ = source_relative;
             output.push(Reference { target: target.to_string(), kind });
         }
@@ -285,5 +291,11 @@ mod tests {
     fn scans_local_references_and_ignores_external_urls() {
         let refs = scan_markdown_references(Path::new("note.md"), "[local](other.md) ![image](img.png) [web](https://example.com)");
         assert_eq!(refs, vec![Reference { target: "other.md".to_string(), kind: ReferenceKind::MarkdownLink }, Reference { target: "img.png".to_string(), kind: ReferenceKind::Image }]);
+    }
+
+    #[test]
+    fn ignores_parentheses_in_prose_and_code() {
+        let refs = scan_markdown_references(Path::new("note.md"), "Golang (scope) and `func (f Foo)`\n[real link](target.md)");
+        assert_eq!(refs, vec![Reference { target: "target.md".to_string(), kind: ReferenceKind::MarkdownLink }]);
     }
 }
