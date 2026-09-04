@@ -10,7 +10,7 @@ Foldown is a free, open-source Windows Markdown editor for people who want a fas
 
 There is no required account, subscription, built-in telemetry, proprietary document format, or database lock-in. Open the same files in any other Markdown editor whenever you want.
 
- **Foldown 1.2.3 is the current production release.** Download the installer or standalone Windows executable from the [GitHub Releases page](https://github.com/TheZeekA/foldown/releases/latest).
+ **Foldown 1.3.0 is the current production release.** Download the installer or standalone Windows executable from the [GitHub Releases page](https://github.com/TheZeekA/foldown/releases/latest).
 
 ## Features
 
@@ -20,6 +20,9 @@ There is no required account, subscription, built-in telemetry, proprietary docu
 - **Workspace search** across your Markdown files with highlighted snippets
 - **Document conversion** from TXT, HTML, CSV, and DOCX into Markdown
 - **Safe file actions** with workspace containment checks, diffs, confirmations, and Recycle Bin deletion
+- **Editor productivity** with document outlines, selection-based AI proposals, and local version history
+- **Workspace Insights** with wiki links, backlinks, tags, and broken-link or missing-asset health checks
+- **Image assets** with drag-and-drop importing into the workspace `assets` folder and live Preview rendering
 
 ## Screenshots
 
@@ -55,6 +58,8 @@ There is no required account, subscription, built-in telemetry, proprietary docu
 - Configurable light, dark, or system theme
 - Configurable editor font and font size
 - **MD Guide** toolbar button opens a Markdown syntax cheat sheet in its own window, so it can stay open alongside the editor
+- Document outline navigation, selection-based AI actions, and local version history
+- Drag images into the editor to copy them into `assets/` and insert a Markdown image reference
 
 ### Workspace management
 
@@ -68,6 +73,7 @@ There is no required account, subscription, built-in telemetry, proprietary docu
 - Drop a Markdown file onto Foldown or open `.md` files through Windows
 - Full-text workspace search with highlighted snippets
 - Window size, position, theme, font, and recent-workspace history persist between sessions
+- Workspace Insights for wiki links/backlinks, YAML frontmatter tags, and workspace health findings
 
 ### Document conversion
 
@@ -371,7 +377,7 @@ foldown/
 
 ## Status
 
- Foldown 1.2.3 is the current production release. Interactive Mode supports local and private-network OpenAI-compatible servers alongside direct integrations with ChatGPT, Claude, and Gemini. Retrieval (chunking, embedding, and reranking) always runs locally regardless of which chat provider is active. Updates are published through GitHub Releases.
+ Foldown 1.3.0 is the current production release. Interactive Mode supports local and private-network OpenAI-compatible servers alongside direct integrations with ChatGPT, Claude, and Gemini. Retrieval (chunking, embedding, and reranking) always runs locally regardless of which chat provider is active. Updates are published through GitHub Releases.
 
 ## License and assets
 
