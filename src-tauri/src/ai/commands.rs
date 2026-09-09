@@ -160,6 +160,9 @@ fn load_active_document(
         root.join(requested)
     };
     let target = ops::ensure_within_workspace(&requested, root)?;
+    if !target.exists() {
+        return Ok(None);
+    }
     if !target
         .extension()
         .is_some_and(|ext| ext.eq_ignore_ascii_case("md"))
@@ -821,6 +824,19 @@ mod tests {
         assert!(prompt.contains("ACTIVE DOCUMENT (complete): Code Review.md"));
         assert!(prompt.contains("## 5. Performance\nPreserve this section."));
         assert!(prompt.contains("Never output drive letters, UNC paths, or absolute paths"));
+    }
+
+    #[test]
+    fn missing_active_document_is_omitted_from_ai_context() {
+        let root = std::env::temp_dir().join(format!(
+            "foldown-ai-missing-active-document-{}",
+            std::process::id()
+        ));
+        std::fs::create_dir_all(&root).unwrap();
+
+        let result = load_active_document(&root, Some("Deleted.md"));
+
+        assert!(result.unwrap().is_none());
     }
 
     #[test]
