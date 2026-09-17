@@ -6,6 +6,7 @@ const saveNow = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
 
 vi.mock("../lib/tauriApi", () => ({
   openWorkspace: vi.fn(),
+  openSingleFile: vi.fn(),
   movePath: vi.fn().mockResolvedValue(undefined),
   getRecentWorkspaces: vi.fn().mockResolvedValue([]),
   getTree: vi.fn().mockResolvedValue([]),
@@ -16,13 +17,15 @@ vi.mock("./editor", () => ({
   useEditorStore: { getState: () => ({ resetForWorkspace: resetEditorForWorkspace, openPath: "C:\\ws\\old.md", dirty: false, openFile, saveNow }) },
 }));
 
-import { movePath, openWorkspace } from "../lib/tauriApi";
+import { movePath, openSingleFile, openWorkspace } from "../lib/tauriApi";
 import { useWorkspaceStore } from "./workspace";
 
 describe("workspace switching", () => {
   beforeEach(() => {
     vi.mocked(openWorkspace).mockReset();
     vi.mocked(openWorkspace).mockResolvedValue("C:\\New-Workspace");
+    vi.mocked(openSingleFile).mockReset();
+    vi.mocked(openSingleFile).mockResolvedValue({ path: "C:\\notes\\one.md", root: "C:\\notes" });
     vi.mocked(movePath).mockReset();
     vi.mocked(movePath).mockResolvedValue(undefined);
     openFile.mockReset();
@@ -39,6 +42,24 @@ describe("workspace switching", () => {
 
     expect(resetEditorForWorkspace).toHaveBeenCalledOnce();
     expect(useWorkspaceStore.getState().path).toBe("C:\\New-Workspace");
+  });
+
+  it("switches to a synthetic one-file session after saving the previous editor", async () => {
+    const order: string[] = [];
+    resetEditorForWorkspace.mockImplementation(async () => { order.push("reset"); });
+    vi.mocked(openSingleFile).mockImplementation(async () => {
+      order.push("activate");
+      return { path: "C:\\notes\\one.md", root: "C:\\notes" };
+    });
+    openFile.mockImplementation(async () => { order.push("open"); });
+
+    await useWorkspaceStore.getState().openSingleFileAt("C:\\notes\\one.md");
+
+    expect(order).toEqual(["reset", "activate", "open"]);
+    expect(useWorkspaceStore.getState().sessionMode).toBe("single-file");
+    expect(useWorkspaceStore.getState().tree).toEqual([
+      { type: "file", name: "one.md", path: "C:\\notes\\one.md" },
+    ]);
   });
 
   it("flushes the OLD workspace's dirty file before the backend switches active workspaces", async () => {

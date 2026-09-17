@@ -70,6 +70,14 @@
   background-color: var(--color-selection);
 }
 
+.sidebar__workspace-name:disabled {
+  cursor: default;
+}
+
+.sidebar__workspace-name:disabled:hover {
+  background: transparent;
+}
+
 .sidebar__workspace-name-text {
   display: block;
   overflow-wrap: anywhere;

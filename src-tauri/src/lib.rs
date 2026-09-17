@@ -134,6 +134,7 @@ pub fn run() {
             commands::convert::convert_document,
             commands::convert::bulk_convert_documents,
             commands::native::take_pending_open,
+            commands::native::open_single_file,
             commands::pdf_export::export_webview_to_pdf,
             ai::commands::send_ai_message,
             ai::commands::run_selection_ai,

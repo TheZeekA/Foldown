@@ -9,7 +9,7 @@ import { Sidebar } from "./components/Sidebar/Sidebar";
 import { useWorkspaceStore } from "./stores/workspace";
 import { useEditorStore } from "./stores/editor";
 import { useSettingsStore } from "./stores/settings";
-import { openExternalFile } from "./lib/externalOpen";
+import { openDroppedFile, openExternalFile } from "./lib/externalOpen";
 import { takePendingOpen, watchWorkspace } from "./lib/tauriApi";
 import { InteractiveModePanel } from "./features/InteractiveMode/InteractiveModePanel";
 import { useInteractiveModeStore } from "./stores/interactiveMode";
@@ -20,6 +20,7 @@ const AI_INDEX_STATUS_EVENT = "ai-index-status";
 
 function App() {
   const { path, loading, error, init } = useWorkspaceStore();
+  const sessionMode = useWorkspaceStore((s) => s.sessionMode);
   const openPath = useEditorStore((s) => s.openPath);
   const initSettings = useSettingsStore((s) => s.init);
   const aiOpen = useInteractiveModeStore((s) => s.isOpen);
@@ -62,7 +63,7 @@ function App() {
       const mdFile = Array.from(files).find((f) => /\.md$/i.test(f.name));
       const mdPath = mdFile ? (mdFile as File & { path?: string }).path : undefined;
       if (mdPath) {
-        openExternalFile(mdPath);
+        openDroppedFile(mdPath);
       } else {
         message("Only Markdown (.md) files can be dropped into Foldown.", {
           title: "Foldown",
@@ -92,8 +93,12 @@ function App() {
 
   useEffect(() => {
     useInteractiveModeStore.getState().resetForWorkspace();
-    if (path) void watchWorkspace(path).catch(() => {});
-  }, [path]);
+    if (path && sessionMode === "workspace") void watchWorkspace(path).catch(() => {});
+  }, [path, sessionMode]);
+
+  useEffect(() => {
+    if (sessionMode === "single-file") useInteractiveModeStore.getState().close();
+  }, [sessionMode]);
 
   if (loading) {
     return (

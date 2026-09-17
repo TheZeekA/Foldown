@@ -25,6 +25,7 @@ interface MenuState {
 export function Sidebar() {
   const {
     path,
+    sessionMode,
     recentWorkspaces,
     tree,
     treeLoading,
@@ -42,6 +43,7 @@ export function Sidebar() {
     deleteNode,
     moveNode,
   } = useWorkspaceStore();
+  const singleFileMode = sessionMode === "single-file";
 
   const { isOpen: searchOpen, open: openSearch, close: closeSearch } = useSearchStore();
   const aiOpen = useInteractiveModeStore((s) => s.isOpen);
@@ -75,7 +77,7 @@ export function Sidebar() {
     };
   }, []);
 
-  const folderName = path?.split(/[\\/]/).filter(Boolean).pop() ?? "";
+  const folderName = singleFileMode ? "Single File" : path?.split(/[\\/]/).filter(Boolean).pop() ?? "";
   const recentMenuItems = buildRecentWorkspaceMenu(recentWorkspaces, path);
 
   useEffect(() => {
@@ -142,7 +144,7 @@ export function Sidebar() {
           </button>
         </div>
         <div className="sidebar__header-actions">
-          <button
+          {!singleFileMode && <button
             className={`sidebar__icon-button${searchOpen ? " sidebar__icon-button--active" : ""}`}
             onClick={() => { setInsightsOpen(false); searchOpen ? closeSearch() : openSearch(); }}
             title="Search workspace"
@@ -152,40 +154,41 @@ export function Sidebar() {
               <circle cx="8" cy="8" r="5.5" />
               <line x1="12.2" y1="12.2" x2="16" y2="16" />
             </svg>
-          </button>
-          <button className={`sidebar__icon-button${insightsOpen ? " sidebar__icon-button--active" : ""}`} onClick={() => { closeSearch(); setInsightsOpen((open) => !open); }} title="Workspace insights" aria-pressed={insightsOpen}>Info</button>
-          <button
+          </button>}
+          {!singleFileMode && <button className={`sidebar__icon-button${insightsOpen ? " sidebar__icon-button--active" : ""}`} onClick={() => { closeSearch(); setInsightsOpen((open) => !open); }} title="Workspace insights" aria-pressed={insightsOpen}>Info</button>}
+          {!singleFileMode && <button
             className={`sidebar__icon-button${showAllFiles ? " sidebar__icon-button--active" : ""}`}
             onClick={toggleShowAllFiles}
             title="Show all files"
             aria-pressed={showAllFiles}
           >
             All
-          </button>
-          <button
+          </button>}
+          {!singleFileMode && <button
             className="sidebar__icon-button"
             onClick={(e) => openMenuFor(e, null)}
             title="New file or folder"
           >
             +
-          </button>
-          <button className="sidebar__icon-button" onClick={choose} title="Change workspace">
-            ⋯
+          </button>}
+          <button className="sidebar__icon-button" onClick={choose} title={singleFileMode ? "Open workspace" : "Change workspace"}>
+            {singleFileMode ? "Open Workspace" : "⋯"}
           </button>
         </div>
       </div>
       <button
         className="sidebar__workspace-name"
         title={path ?? undefined}
-        onClick={() => setWorkspaceMenuOpen((open) => !open)}
+        onClick={() => { if (!singleFileMode) setWorkspaceMenuOpen((open) => !open); }}
         aria-label={`Current workspace: ${folderName}`}
-        aria-expanded={workspaceMenuOpen}
-        aria-haspopup="menu"
+        aria-expanded={singleFileMode ? undefined : workspaceMenuOpen}
+        aria-haspopup={singleFileMode ? undefined : "menu"}
+        disabled={singleFileMode}
       >
         <span className="sidebar__workspace-name-text">{folderName}</span>
-        <span className="sidebar__workspace-chevron" aria-hidden="true">⌄</span>
+        {!singleFileMode && <span className="sidebar__workspace-chevron" aria-hidden="true">⌄</span>}
       </button>
-      {workspaceMenuOpen && (
+      {!singleFileMode && workspaceMenuOpen && (
         <div className="sidebar__workspace-menu" role="menu" aria-label="Recent workspaces">
           <div className="sidebar__workspace-menu-heading">Recent workspaces</div>
           {recentMenuItems.length > 0 ? recentMenuItems.map(({ workspace, isCurrent }) => (
@@ -222,7 +225,7 @@ export function Sidebar() {
       </div>
       {settingsPage && <SettingsModal initialPage={settingsPage} onClose={() => setSettingsPage(null)} />}
 
-      <button className={`sidebar__interactive-button${aiOpen ? " sidebar__interactive-button--active" : ""}`} onClick={async () => {
+      {!singleFileMode && <button className={`sidebar__interactive-button${aiOpen ? " sidebar__interactive-button--active" : ""}`} onClick={async () => {
         try {
           const settings = await getAiSettings();
           const active = activeProviderConfig(settings);
@@ -234,26 +237,26 @@ export function Sidebar() {
         } catch { setNoAiConfigured(true); }
       }} aria-pressed={aiOpen}>
         <span>✦</span> Interactive Mode
-      </button>
+      </button>}
 
       {noAiConfigured && <div className="settings-modal__overlay" onMouseDown={() => setNoAiConfigured(false)}><div className="settings-modal sidebar__ai-warning" role="dialog" aria-modal="true" onMouseDown={(e) => e.stopPropagation()}>
         <h2>No AI Server Configured</h2><p>Add a server endpoint and choose a model before opening Interactive Mode.</p>
         <div><button onClick={() => { setNoAiConfigured(false); setSettingsPage("ai"); }}>Open Settings</button><button onClick={() => setNoAiConfigured(false)}>Cancel</button></div>
       </div></div>}
 
-      {insightsOpen ? (
+      {!singleFileMode && insightsOpen ? (
         <InsightsPanel onClose={() => setInsightsOpen(false)} />
-      ) : searchOpen ? (
+      ) : !singleFileMode && searchOpen ? (
         <SearchPanel />
       ) : (
         <div
           className="sidebar__tree"
-          onContextMenu={(e) => openMenuFor(e, null)}
+          onContextMenu={singleFileMode ? undefined : (e) => openMenuFor(e, null)}
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => {
             e.preventDefault();
             const sourcePath = e.dataTransfer.getData("text/plain");
-            if (sourcePath && path) moveNode(sourcePath, path);
+            if (!singleFileMode && sourcePath && path) moveNode(sourcePath, path);
           }}
         >
           {treeLoading && tree.length === 0 && <p className="sidebar__empty">Loading…</p>}
@@ -261,7 +264,7 @@ export function Sidebar() {
             <p className="sidebar__empty">No Markdown files yet.</p>
           )}
           {tree.map((node) => (
-            <TreeItem key={node.path} node={node} depth={0} onContextMenu={openMenuFor} />
+            <TreeItem key={node.path} node={node} depth={0} onContextMenu={openMenuFor} readOnly={singleFileMode} />
           ))}
           {creating?.parentPath === path && (
             <div className="tree-item__row" style={{ paddingLeft: "0.5rem" }}>

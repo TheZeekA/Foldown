@@ -11,6 +11,7 @@ import {
   indexWorkspace,
   movePath,
   openWorkspace,
+  openSingleFile,
   pickWorkspaceFolder,
   removeRecentWorkspace,
 } from "../lib/tauriApi";
@@ -24,6 +25,7 @@ interface Creating {
 }
 
 interface WorkspaceState {
+  sessionMode: "none" | "workspace" | "single-file";
   path: string | null;
   loading: boolean;
   error: string | null;
@@ -39,6 +41,7 @@ interface WorkspaceState {
   createNew: (parentPath: string, name: string) => Promise<void>;
   removeRecent: (path: string) => Promise<void>;
   openWorkspaceAt: (path: string) => Promise<void>;
+  openSingleFileAt: (path: string) => Promise<void>;
   refreshTree: () => Promise<void>;
   toggleShowAllFiles: () => Promise<void>;
 
@@ -56,6 +59,7 @@ interface WorkspaceState {
 }
 
 export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
+  sessionMode: "none",
   path: null,
   loading: true,
   error: null,
@@ -69,7 +73,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   init: async () => {
     try {
       const recentWorkspaces = await getRecentWorkspaces();
-      set({ path: null, recentWorkspaces, loading: false });
+      set({ path: null, sessionMode: "none", recentWorkspaces, loading: false });
     } catch (error) {
       set({ error: String(error), loading: false });
     }
@@ -114,7 +118,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     }
     try {
       const canonicalPath = await openWorkspace(path);
-      set({ path: canonicalPath, error: null, recentWorkspaces: await getRecentWorkspaces() });
+      set({ path: canonicalPath, sessionMode: "workspace", error: null, recentWorkspaces: await getRecentWorkspaces() });
       await get().refreshTree();
       indexWorkspace(path).catch(() => {
         // search is best-effort; the sidebar tree still works without an index
@@ -124,9 +128,32 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     }
   },
 
+  openSingleFileAt: async (path) => {
+    try {
+      await useEditorStore.getState().resetForWorkspace();
+    } catch (error) {
+      set({ error: `Could not save your changes, so the file wasn't opened: ${String(error)}` });
+      return;
+    }
+    try {
+      const session = await openSingleFile(path);
+      set({
+        path: session.root,
+        sessionMode: "single-file",
+        tree: [{ type: "file", name: baseName(session.path), path: session.path }],
+        treeLoading: false,
+        error: null,
+      });
+      await useEditorStore.getState().openFile(session.path, session.root);
+    } catch (error) {
+      set({ error: String(error) });
+    }
+  },
+
   refreshTree: async () => {
-    const { path, showAllFiles } = get();
+    const { path, showAllFiles, sessionMode } = get();
     if (!path) return;
+    if (sessionMode === "single-file") return;
     set({ treeLoading: true });
     try {
       const tree = await getTree(path, showAllFiles);

@@ -83,6 +83,11 @@ export interface AiChatResult {
   appliedPaths: string[];
 }
 
+export interface SingleFileSession {
+  path: string;
+  root: string;
+}
+
 export type SelectionAiAction = "explain" | "summarize" | "rewrite" | "clarify" | "checklist" | "action-items" | "translate";
 
 export interface SelectionAiResult {

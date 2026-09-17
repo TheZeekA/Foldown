@@ -9,9 +9,10 @@ interface TreeItemProps {
   node: TreeNode;
   depth: number;
   onContextMenu: (e: React.MouseEvent, node: TreeNode) => void;
+  readOnly?: boolean;
 }
 
-export function TreeItem({ node, depth, onContextMenu }: TreeItemProps) {
+export function TreeItem({ node, depth, onContextMenu, readOnly = false }: TreeItemProps) {
   const [expanded, setExpanded] = useState(true);
   const [dragOver, setDragOver] = useState(false);
   const workspacePath = useWorkspaceStore((s) => s.path);
@@ -57,8 +58,8 @@ export function TreeItem({ node, depth, onContextMenu }: TreeItemProps) {
           className={`tree-item__row tree-item__row--folder${dragOver ? " tree-item__row--drag-over" : ""}`}
           style={indent}
           onClick={() => setExpanded((value) => !value)}
-          onContextMenu={(e) => onContextMenu(e, node)}
-          draggable
+          onContextMenu={readOnly ? undefined : (e) => onContextMenu(e, node)}
+          draggable={!readOnly}
           onDragStart={(e) => e.dataTransfer.setData("text/plain", node.path)}
           onDragOver={(e) => {
             e.preventDefault();
@@ -75,7 +76,7 @@ export function TreeItem({ node, depth, onContextMenu }: TreeItemProps) {
         {expanded && (
           <>
             {node.children.map((child) => (
-              <TreeItem key={child.path} node={child} depth={depth + 1} onContextMenu={onContextMenu} />
+              <TreeItem key={child.path} node={child} depth={depth + 1} onContextMenu={onContextMenu} readOnly={readOnly} />
             ))}
             {creatingHere && (
               <div style={{ paddingLeft: `${(depth + 1) * 1 + 0.5}rem` }} className="tree-item__row">
@@ -96,8 +97,8 @@ export function TreeItem({ node, depth, onContextMenu }: TreeItemProps) {
         closeAi();
         if (workspacePath) void openFile(node.path, workspacePath);
       }}
-      onContextMenu={(e) => onContextMenu(e, node)}
-      draggable
+      onContextMenu={readOnly ? undefined : (e) => onContextMenu(e, node)}
+      draggable={!readOnly}
       onDragStart={(e) => e.dataTransfer.setData("text/plain", node.path)}
     >
       <span className="tree-item__label">{node.name}</span>
