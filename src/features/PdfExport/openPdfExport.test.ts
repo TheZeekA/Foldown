@@ -30,6 +30,7 @@ describe("openPdfExportWith", () => {
       listenForResult: async (handler) => { finish = handler; return () => undefined; },
       createWindow: async () => { calls.push("create"); },
       emitPayload: async () => { calls.push("emit"); },
+      closeWindow: async () => undefined,
       setTimer: () => 1,
       clearTimer: vi.fn(),
     });
@@ -46,6 +47,7 @@ describe("openPdfExportWith", () => {
 
   it("immediately delivers to an existing hidden window and waits for completion", async () => {
     const calls: string[] = [];
+    const closeWindow = vi.fn().mockResolvedValue(undefined);
     let finish!: (result: { requestId: string; outputPath: string; error: string | null }) => void;
     const operation = openPdfExportWith(payload, {
       getExistingWindow: async () => ({ label: "pdf-export" }),
@@ -53,6 +55,7 @@ describe("openPdfExportWith", () => {
       listenForResult: async (handler) => { finish = handler; return () => undefined; },
       createWindow: async () => { throw new Error("should not create"); },
       emitPayload: async () => { calls.push("emit"); },
+      closeWindow,
       setTimer: () => 1,
       clearTimer: vi.fn(),
     });
@@ -61,6 +64,7 @@ describe("openPdfExportWith", () => {
     await expect(operation).resolves.toBe(payload.outputPath);
 
     expect(calls).toEqual(["emit"]);
+    expect(closeWindow).toHaveBeenCalledOnce();
   });
 
   it("rejects on readiness timeout and removes the listener", async () => {
@@ -72,6 +76,7 @@ describe("openPdfExportWith", () => {
       listenForResult: async () => () => undefined,
       createWindow: async () => undefined,
       emitPayload: async () => undefined,
+      closeWindow: async () => undefined,
       setTimer: (handler) => { timeout = handler; return 1; },
       clearTimer: vi.fn(),
     });
@@ -90,6 +95,7 @@ describe("openPdfExportWith", () => {
       listenForResult: async () => () => undefined,
       createWindow: () => new Promise(() => undefined),
       emitPayload: async () => undefined,
+      closeWindow: async () => undefined,
       setTimer: (handler) => { timeout = handler; return 1; },
       clearTimer: vi.fn(),
     });

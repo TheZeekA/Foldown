@@ -19,6 +19,7 @@ interface PdfExportDependencies {
   listenForResult(handler: (result: PdfExportResult) => void): Promise<() => void>;
   createWindow(): Promise<void>;
   emitPayload(payload: PdfExportPayload): Promise<void>;
+  closeWindow(): Promise<void>;
   setTimer(handler: () => void, delayMs: number): unknown;
   clearTimer(timer: unknown): void;
 }
@@ -65,6 +66,11 @@ export async function openPdfExportWith(
   } finally {
     if (timer !== undefined) dependencies.clearTimer(timer);
     for (const cleanup of cleanups) cleanup();
+    try {
+      await dependencies.closeWindow();
+    } catch {
+      // Export completion is authoritative; window cleanup is best-effort.
+    }
   }
 }
 
@@ -91,6 +97,10 @@ const productionDependencies: PdfExportDependencies = {
   listenForResult: async (handler) => listen<PdfExportResult>(PDF_EXPORT_RESULT_EVENT, (event) => handler(event.payload)),
   createWindow: createPdfWindow,
   emitPayload: (payload) => emitTo(PDF_EXPORT_WINDOW_LABEL, PDF_EXPORT_PAYLOAD_EVENT, payload),
+  closeWindow: async () => {
+    const window = await WebviewWindow.getByLabel(PDF_EXPORT_WINDOW_LABEL);
+    await window?.close();
+  },
   setTimer: (handler, delayMs) => setTimeout(handler, delayMs),
   clearTimer: (timer) => clearTimeout(timer as ReturnType<typeof setTimeout>),
 };
