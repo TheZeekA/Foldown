@@ -1,22 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { unified } from "unified";
-import remarkParse from "remark-parse";
-import remarkGfm from "remark-gfm";
-import remarkRehype from "remark-rehype";
-import rehypeSanitize from "rehype-sanitize";
-import rehypeStringify from "rehype-stringify";
-import { convertFileSrc } from "@tauri-apps/api/core";
 import { useEditorStore } from "../../stores/editor";
 import { useWorkspaceStore } from "../../stores/workspace";
-import { replaceLocalImageSources } from "./imageUrls";
+import { markdownToHtml } from "./markdownToHtml";
 import "./Preview.css";
-
-const processor = unified()
-  .use(remarkParse)
-  .use(remarkGfm)
-  .use(remarkRehype)
-  .use(rehypeSanitize)
-  .use(rehypeStringify);
 
 export function Preview() {
   const body = useEditorStore((s) => s.body);
@@ -33,10 +19,9 @@ export function Preview() {
   useEffect(() => {
     let cancelled = false;
     const render = () => {
-      processor.process(body).then((file) => {
+      markdownToHtml(body, { openPath, workspaceRoot }).then((rendered) => {
         if (!cancelled) {
-          const rendered = String(file);
-          setHtml(openPath && workspaceRoot ? replaceLocalImageSources(rendered, openPath, workspaceRoot, convertFileSrc) : rendered);
+          setHtml(rendered);
         }
       });
     };

@@ -3,6 +3,11 @@ import { useEditorStore, type ViewMode } from "../../stores/editor";
 import * as cmd from "../../editor/commands";
 import type { EditorView } from "@codemirror/view";
 import { openMdGuideWindow } from "../../lib/mdGuideWindow";
+import { useState } from "react";
+import { message } from "@tauri-apps/plugin-dialog";
+import { useWorkspaceStore } from "../../stores/workspace";
+import { createPdfExportPayload } from "../../features/PdfExport/pdfExportProtocol";
+import { openPdfExport } from "../../features/PdfExport/openPdfExport";
 
 function Icon({ children }: { children: React.ReactNode }) {
   return (
@@ -173,12 +178,33 @@ export function Toolbar({ onHistoryToggle }: { onHistoryToggle?: () => void }) {
   const view = useEditorStore((s) => s.view);
   const viewMode = useEditorStore((s) => s.viewMode);
   const setViewMode = useEditorStore((s) => s.setViewMode);
+  const openPath = useEditorStore((s) => s.openPath);
+  const workspaceRoot = useWorkspaceStore((s) => s.path);
+  const [exportPending, setExportPending] = useState(false);
 
   const run = (fn: (view: EditorView) => void) => () => {
     if (view) fn(view);
   };
 
   const formattingDisabled = !view || viewMode === "preview";
+
+  const exportPdf = async () => {
+    const editor = useEditorStore.getState();
+    const root = useWorkspaceStore.getState().path;
+    if (!editor.openPath || !root || exportPending) return;
+    setExportPending(true);
+    try {
+      await openPdfExport(createPdfExportPayload(editor.body, editor.openPath, root));
+    } catch (error) {
+      console.error("Could not open PDF export:", error);
+      await message(`Could not open PDF export: ${String(error)}`, {
+        title: "Foldown",
+        kind: "error",
+      });
+    } finally {
+      setExportPending(false);
+    }
+  };
 
   return (
     <div className="toolbar">
@@ -204,6 +230,14 @@ export function Toolbar({ onHistoryToggle }: { onHistoryToggle?: () => void }) {
       </div>
       <div className="toolbar__spacer" />
       {onHistoryToggle && <button type="button" className="toolbar__text-button" onClick={onHistoryToggle}>History</button>}
+      <button
+        type="button"
+        className="toolbar__text-button"
+        disabled={!openPath || !workspaceRoot || exportPending}
+        onClick={() => void exportPdf()}
+      >
+        {exportPending ? "Opening PDF…" : "Export PDF"}
+      </button>
       <SaveStatus />
       <div className="toolbar__group toolbar__group--modes">
         {(

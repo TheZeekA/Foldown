@@ -1,0 +1,72 @@
+.pdf-export {
+  min-height: 100%;
+  background: var(--color-bg);
+}
+
+.pdf-export__status {
+  margin: 0;
+  padding: 2rem;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.pdf-export__status--error {
+  color: var(--color-text);
+}
+
+@page {
+  margin: 18mm;
+}
+
+@media print {
+  html,
+  body,
+  #root,
+  .pdf-export,
+  .preview {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  html,
+  body,
+  .pdf-export,
+  .preview {
+    background: var(--color-bg);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .pdf-export__status {
+    display: none;
+  }
+
+  .preview__body {
+    max-width: none;
+    padding: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .preview__body h1,
+  .preview__body h2,
+  .preview__body h3,
+  .preview__body h4,
+  .preview__body h5,
+  .preview__body h6 {
+    break-after: avoid-page;
+  }
+
+  .preview__body img,
+  .preview__body tr,
+  .preview__body blockquote,
+  .preview__body pre {
+    break-inside: avoid-page;
+  }
+
+  .preview__body pre {
+    overflow: visible;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+}

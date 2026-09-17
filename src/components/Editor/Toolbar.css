@@ -85,6 +85,16 @@
   background: var(--color-selection);
 }
 
+.toolbar__text-button:disabled {
+  color: var(--color-text-muted);
+  opacity: 0.45;
+  cursor: default;
+}
+
+.toolbar__text-button:hover:disabled {
+  background: transparent;
+}
+
 .toolbar__save-status--error {
   color: var(--color-text);
 }
