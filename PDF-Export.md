@@ -6,14 +6,15 @@ Add an **Export PDF** action for the currently open Markdown document. The
 export must use the editor's current in-memory body, including unsaved edits,
 and produce output that is visually consistent with the live preview.
 
-The first version uses the native WebView2 print dialog. The user selects
-"Save as PDF" or "Microsoft Print to PDF" and chooses the destination there.
-Foldown will not present a separate save dialog or write PDF bytes itself.
+Foldown presents a Save PDF file picker, renders through a hidden WebView2
+window, and calls WebView2's native `PrintToPdf` API through Rust. The PDF is
+written directly to the selected path without showing the Windows print dialog.
 
 ## Constraints
 
 - Windows and Tauri v2 remain the supported runtime.
-- No new native or system dependency is introduced.
+- No external executable or system dependency is introduced. The existing
+  WebView2 runtime performs PDF conversion.
 - The frontend `unified` Markdown pipeline remains the rendering source of truth.
 - Export uses `body`, not raw `content`, so frontmatter remains excluded.
 - Export includes unsaved editor changes.
@@ -35,10 +36,9 @@ Foldown will not present a separate save dialog or write PDF bytes itself.
 
 ## Chosen Approach
 
-Create a dedicated PDF-preview webview and call the standard DOM
-`window.print()` inside it. Do not call nonexistent Tauri
-`WebviewWindow.print()` or `eval()` methods, and do not combine the browser
-print dialog with `tauri-plugin-dialog`.
+Create a hidden PDF webview and call WebView2 `PrintToPdf` through a
+Windows-specific Tauri command after rendering settles. The main window uses
+`tauri-plugin-dialog` only to select the output path; no print dialog appears.
 
 Rejected alternatives are WebView2 COM interop, WeasyPrint or system CLIs, and
 a duplicate Rust Markdown renderer. They add platform complexity, dependencies,
@@ -77,11 +77,13 @@ export interface PdfExportPayload {
   body: string;
   openPath: string;
   workspaceRoot: string;
+  outputPath: string;
 }
 
 export const PDF_EXPORT_WINDOW_LABEL = "pdf-export";
 export const PDF_EXPORT_READY_EVENT = "pdf-export-ready";
 export const PDF_EXPORT_PAYLOAD_EVENT = "pdf-export-payload";
+export const PDF_EXPORT_RESULT_EVENT = "pdf-export-result";
 ```
 
 The request ID prevents stale payloads from being printed when the window is
@@ -91,12 +93,13 @@ reused.
 
 Create `src/features/PdfExport/openPdfExport.ts`. `openPdfExport(payload)`:
 
-1. Registers the ready-event listener before creating or focusing the window.
+1. Registers result and ready-event listeners before creating the hidden window.
 2. Creates the `pdf-export` `WebviewWindow` dynamically when absent.
 3. Waits for a ready event from that window.
 4. Sends the captured payload with `emitTo(PDF_EXPORT_WINDOW_LABEL, ...)`.
-5. Removes the temporary listener after delivery or failure.
-6. Rejects if creation or delivery fails or readiness times out.
+5. Waits for a matching success/failure result from the export window.
+6. Removes temporary listeners after completion or failure.
+7. Rejects if creation, delivery, conversion, or readiness times out.
 
 The payload is captured when Export is clicked, so later editing cannot alter
 an export already in progress. Reusing the window is permitted; each click gets
@@ -114,11 +117,12 @@ Create `src/features/PdfExport/PdfExportWindow.tsx`. On startup it:
    `.preview > .preview__body`.
 5. Waits for React commit, `document.fonts.ready`, and every current image to
    either load or fail.
-6. Calls `window.print()` once for that request ID.
+6. Invokes `export_webview_to_pdf(outputPath)` once for that request ID.
+7. Emits a matching success or failure result to the main window.
 
-The window shows a loading or error state before content is ready and remains
-open after printing or cancellation. The one-print-per-request guard must work
-under React Strict Mode and reset only for a different request ID.
+The export window is hidden and remains available for later exports. The
+one-export-per-request guard must work under React Strict Mode and reset only
+for a different request ID.
 
 ### Theme and print styling
 
@@ -147,11 +151,10 @@ to keep the PDF window narrowly scoped.
 
 ## User Interface
 
-Add an **Export PDF** text action near History and Save Status. It reads the
-current store snapshot at click time. It is disabled without an open document,
-and repeated clicks are ignored while creation/delivery is pending.
-
-No filename is proposed because the native print dialog owns the destination.
+Add an **Export PDF** text action near History and Save Status. It opens a Save
+PDF picker defaulting to the Markdown file's name with a `.pdf` extension, then
+captures the current store snapshot. It is disabled without an open document,
+and repeated clicks are ignored while conversion is pending.
 
 ## Error Handling
 
@@ -176,6 +179,7 @@ Create:
 - `src/features/PdfExport/PdfExportWindow.css`
 - `src/features/PdfExport/printReadiness.ts`
 - `src/features/PdfExport/printReadiness.test.ts`
+- `src-tauri/src/commands/pdf_export.rs`
 
 Modify:
 
@@ -183,8 +187,12 @@ Modify:
 - `src/components/Editor/Toolbar.tsx`
 - `src/main.tsx`
 - `src-tauri/capabilities/default.json`, or split capabilities if required
+- `src-tauri/Cargo.toml`
+- `src-tauri/src/commands/mod.rs`
+- `src-tauri/src/lib.rs`
 
-No Rust command or dependency is required.
+The Rust implementation directly depends on the same `webview2-com` version
+used by Tauri so it can access `ICoreWebView2_7::PrintToPdf`.
 
 ## Testing
 
@@ -202,8 +210,8 @@ cargo test --manifest-path src-tauri/Cargo.toml
 
 Manual Windows verification uses a multi-page document containing headings,
 tables, task lists, blockquotes, long code lines, links, and local images.
-Verify all themes, unsaved changes, pagination, repeated exports, cancellation,
-and actual output through Microsoft Print to PDF.
+Verify all themes, unsaved changes, pagination, repeated exports, Save-dialog
+cancellation, and direct PDF output without a print dialog.
 
 ## Acceptance Criteria
 
@@ -211,10 +219,10 @@ and actual output through Microsoft Print to PDF.
 - The snapshot contains unsaved body edits and excludes frontmatter.
 - Preview and export use the same Markdown-to-HTML function.
 - Local images resolve in the PDF preview.
-- The active theme is represented, subject to native print background settings.
+- The active theme is represented in the generated PDF.
 - Printing starts only after HTML, fonts, and images settle.
-- React Strict Mode does not cause duplicate print dialogs.
+- React Strict Mode does not cause duplicate conversion jobs.
 - Repeated exports print the newest request exactly once.
-- Cancelling leaves the app usable.
-- No native dependency, Rust PDF renderer, or redundant save dialog is added.
+- Cancelling the Save dialog leaves the app usable and starts no export.
+- No Windows print dialog, external PDF renderer, or redundant renderer is used.
 - Frontend tests/build and Rust tests pass.

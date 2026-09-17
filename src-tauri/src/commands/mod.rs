@@ -3,6 +3,7 @@ pub mod files;
 pub mod history;
 pub mod knowledge;
 pub mod native;
+pub mod pdf_export;
 pub mod search;
 pub mod settings;
 pub mod workspace;

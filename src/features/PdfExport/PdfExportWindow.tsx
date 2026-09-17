@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { emitTo, listen } from "@tauri-apps/api/event";
+import { invoke } from "@tauri-apps/api/core";
 import { markdownToHtml } from "../../components/Preview/markdownToHtml";
 import "../../components/Preview/Preview.css";
 import "../../styles/theme.css";
@@ -7,6 +8,7 @@ import { useSettingsStore } from "../../stores/settings";
 import {
   PDF_EXPORT_PAYLOAD_EVENT,
   PDF_EXPORT_READY_EVENT,
+  PDF_EXPORT_RESULT_EVENT,
   type PdfExportPayload,
 } from "./pdfExportProtocol";
 import { shouldPrintRequest, waitForPrintResources } from "./printReadiness";
@@ -14,6 +16,7 @@ import "./PdfExportWindow.css";
 
 interface RenderedExport {
   requestId: string;
+  outputPath: string;
   html: string;
 }
 
@@ -54,7 +57,7 @@ export function PdfExportWindow() {
     setRendered(null);
     void markdownToHtml(payload.body, payload)
       .then((html) => {
-        if (!cancelled) setRendered({ requestId: payload.requestId, html });
+        if (!cancelled) setRendered({ requestId: payload.requestId, outputPath: payload.outputPath, html });
       })
       .catch((reason) => {
         if (!cancelled) setError(`Could not render this document: ${String(reason)}`);
@@ -73,9 +76,24 @@ export function PdfExportWindow() {
       });
       if (cancelled || !shouldPrintRequest(rendered.requestId, lastPrintedRequestId.current)) return;
       lastPrintedRequestId.current = rendered.requestId;
-      window.print();
+      try {
+        await invoke("export_webview_to_pdf", { path: rendered.outputPath });
+        await emitTo("main", PDF_EXPORT_RESULT_EVENT, {
+          requestId: rendered.requestId,
+          outputPath: rendered.outputPath,
+          error: null,
+        });
+      } catch (reason) {
+        const detail = String(reason);
+        setError(`Could not export this document: ${detail}`);
+        await emitTo("main", PDF_EXPORT_RESULT_EVENT, {
+          requestId: rendered.requestId,
+          outputPath: rendered.outputPath,
+          error: detail,
+        });
+      }
     })().catch((reason) => {
-      if (!cancelled) setError(`Could not prepare this document for printing: ${String(reason)}`);
+      if (!cancelled) setError(`Could not prepare this document for PDF export: ${String(reason)}`);
     });
     return () => { cancelled = true; };
   }, [rendered]);

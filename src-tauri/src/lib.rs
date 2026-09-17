@@ -14,8 +14,8 @@ use tauri::{Emitter, Manager, WindowEvent};
 
 use ai::commands::AiRuntime;
 use ai::index::KnowledgeIndex;
-use history::HistoryStore;
 use fs::watcher::{FileWatcher, WorkspaceWatcher};
+use history::HistoryStore;
 use native::PendingOpen;
 use search::index::SearchIndex;
 use settings::store::{SettingsStore, WindowState};
@@ -134,6 +134,7 @@ pub fn run() {
             commands::convert::convert_document,
             commands::convert::bulk_convert_documents,
             commands::native::take_pending_open,
+            commands::pdf_export::export_webview_to_pdf,
             ai::commands::send_ai_message,
             ai::commands::run_selection_ai,
             ai::commands::cancel_ai_request,

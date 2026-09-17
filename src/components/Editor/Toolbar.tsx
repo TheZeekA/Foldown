@@ -4,7 +4,7 @@ import * as cmd from "../../editor/commands";
 import type { EditorView } from "@codemirror/view";
 import { openMdGuideWindow } from "../../lib/mdGuideWindow";
 import { useState } from "react";
-import { message } from "@tauri-apps/plugin-dialog";
+import { message, save } from "@tauri-apps/plugin-dialog";
 import { useWorkspaceStore } from "../../stores/workspace";
 import { createPdfExportPayload } from "../../features/PdfExport/pdfExportProtocol";
 import { openPdfExport } from "../../features/PdfExport/openPdfExport";
@@ -194,7 +194,19 @@ export function Toolbar({ onHistoryToggle }: { onHistoryToggle?: () => void }) {
     if (!editor.openPath || !root || exportPending) return;
     setExportPending(true);
     try {
-      await openPdfExport(createPdfExportPayload(editor.body, editor.openPath, root));
+      const outputPath = await save({
+        title: "Export PDF",
+        defaultPath: editor.openPath.replace(/\.md$/i, ".pdf"),
+        filters: [{ name: "PDF document", extensions: ["pdf"] }],
+      });
+      if (!outputPath) return;
+      const savedPath = await openPdfExport(
+        createPdfExportPayload(editor.body, editor.openPath, root, outputPath),
+      );
+      await message(`PDF saved to ${savedPath}`, {
+        title: "Foldown",
+        kind: "info",
+      });
     } catch (error) {
       console.error("Could not open PDF export:", error);
       await message(`Could not open PDF export: ${String(error)}`, {
