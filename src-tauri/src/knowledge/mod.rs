@@ -2,6 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::{Component, Path};
 
+use percent_encoding::percent_decode_str;
 use serde::Serialize;
 use serde_yaml::Value;
 
@@ -248,7 +249,11 @@ pub fn scan_workspace(root: &Path) -> AppResult<WorkspaceMetadata> {
         }
         for reference in scan_markdown_references(Path::new(path), body) {
             let target = reference.target.split(['#', '?']).next().unwrap_or_default();
-            let target_path = Path::new(path).parent().unwrap_or_else(|| Path::new("")).join(target);
+            let decoded_target = percent_decode_str(target)
+                .decode_utf8()
+                .map(|value| value.into_owned())
+                .unwrap_or_else(|_| target.to_string());
+            let target_path = Path::new(path).parent().unwrap_or_else(|| Path::new("")).join(&decoded_target);
             if !root.join(&target_path).is_file() {
                 health.push(HealthFinding { category: match reference.kind { ReferenceKind::Image => "missing-asset", ReferenceKind::MarkdownLink => "broken-link" }.to_string(), severity: "warning".to_string(), path: path.clone(), message: "Local target was not found".to_string(), target: Some(reference.target) });
             }
@@ -297,5 +302,30 @@ mod tests {
     fn ignores_parentheses_in_prose_and_code() {
         let refs = scan_markdown_references(Path::new("note.md"), "Golang (scope) and `func (f Foo)`\n[real link](target.md)");
         assert_eq!(refs, vec![Reference { target: "target.md".to_string(), kind: ReferenceKind::MarkdownLink }]);
+    }
+
+    #[test]
+    fn health_scan_url_decodes_reference_targets_before_checking_existence() {
+        // Regression test: a percent-encoded local reference (e.g. a space
+        // encoded as %20) was checked against disk without decoding first, so
+        // a real file with a literal space in its name was false-flagged as
+        // missing.
+        use std::sync::atomic::{AtomicU64, Ordering};
+        static COUNTER: AtomicU64 = AtomicU64::new(0);
+        let root = std::env::temp_dir().join(format!(
+            "foldown-knowledge-test-{}-{}",
+            std::process::id(),
+            COUNTER.fetch_add(1, Ordering::SeqCst)
+        ));
+        fs::create_dir_all(root.join("assets")).unwrap();
+        fs::write(root.join("assets").join("My Diagram.png"), b"png").unwrap();
+        fs::write(root.join("note.md"), "![Diagram](assets/My%20Diagram.png)").unwrap();
+
+        let metadata = scan_workspace(&root).unwrap();
+        assert!(
+            metadata.health.iter().all(|finding| finding.category != "missing-asset"),
+            "unexpected findings: {:?}",
+            metadata.health
+        );
     }
 }

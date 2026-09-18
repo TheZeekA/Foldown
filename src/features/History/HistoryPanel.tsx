@@ -10,6 +10,7 @@ export function HistoryPanel({ onClose }: { onClose: () => void }) {
   const workspaceRoot = useWorkspaceStore((state) => state.path);
   const path = useEditorStore((state) => state.openPath);
   const currentContent = useEditorStore((state) => state.content);
+  const lastSavedContent = useEditorStore((state) => state.lastSavedContent);
   const reloadFromDisk = useEditorStore((state) => state.reloadFromDisk);
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
   const [selected, setSelected] = useState<{ entry: HistoryEntry; content: string } | null>(null);
@@ -51,7 +52,11 @@ export function HistoryPanel({ onClose }: { onClose: () => void }) {
     if (!selected || !workspaceRoot || !path) return;
     if (!window.confirm("Restore this version? The current version will be saved in history first.")) return;
     try {
-      await restoreHistorySnapshot(selected.entry.id, workspaceRoot, path, currentContent);
+      // The backend guard compares against what's actually on disk, so it must
+      // be given the last-saved content — not the live (possibly unsaved)
+      // editor buffer, which would make the guard reject a restore any time
+      // there are pending edits even though nothing changed outside Foldown.
+      await restoreHistorySnapshot(selected.entry.id, workspaceRoot, path, lastSavedContent);
       await reloadFromDisk();
       await refresh();
       setSelected(null);

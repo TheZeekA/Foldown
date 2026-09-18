@@ -6,7 +6,7 @@ import { languages } from "@codemirror/language-data";
 import { useEditorStore } from "../../stores/editor";
 import "./Editor.css";
 import { importImageAsset, importImageAssetBytes } from "../../lib/tauriApi";
-import { buildImageMarkdown, buildImageMarkdownForDocument, isSupportedImagePath } from "./imageDrop";
+import { buildImageMarkdownForDocument, isSupportedImagePath } from "./imageDrop";
 import { message } from "@tauri-apps/plugin-dialog";
 
 /** Tags a programmatic full-doc replace (file load/switch/reload) so the update
@@ -186,11 +186,17 @@ export function Editor() {
     event.stopPropagation();
     if (!openPath || !workspaceRoot) return;
     try {
-      const markdown = isInternalImage
-        ? buildImageMarkdownForDocument(internalAssetPath, openPath, workspaceRoot)
-        : buildImageMarkdown(image!.path
+      const importedAssetPath = isInternalImage
+        ? null
+        : image!.path
           ? await importImageAsset(image!.path, openPath, workspaceRoot)
-          : await importImageAssetBytes(image!.name, Array.from(new Uint8Array(await image!.arrayBuffer())), openPath, workspaceRoot));
+          : await importImageAssetBytes(image!.name, Array.from(new Uint8Array(await image!.arrayBuffer())), openPath, workspaceRoot);
+      // import_image_asset always stores under the workspace root's `assets/`
+      // folder and returns a root-relative path, so it must go through the
+      // same document-relative builder as an internal drag — otherwise a
+      // document that isn't itself at the workspace root gets a reference
+      // resolved relative to its own directory instead of the root.
+      const markdown = buildImageMarkdownForDocument(isInternalImage ? internalAssetPath : importedAssetPath!, openPath, workspaceRoot);
       const position = selectionRange?.to ?? 0;
       replaceRange(position, position, `${markdown}\n`);
     } catch (error) {

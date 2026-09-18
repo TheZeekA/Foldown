@@ -35,4 +35,15 @@ describe("extractMarkdownHeadings", () => {
     expect(extractMarkdownHeadings("")).toEqual([]);
     expect(extractMarkdownHeadings("#\n##   ")).toEqual([]);
   });
+
+  it("keeps correct offsets across CRLF line endings", () => {
+    // Regression test: splitting on /\r?\n/ dropped the "\r" from the line's
+    // length, undercounting `offset` by one per CRLF line seen so far.
+    const source = "# One\r\n\r\n## Two\r\n### Three";
+    expect(extractMarkdownHeadings(source)).toEqual([
+      { text: "One", level: 1, from: 0, line: 0 },
+      { text: "Two", level: 2, from: 9, line: 2 },
+      { text: "Three", level: 3, from: 17, line: 3 },
+    ]);
+  });
 });

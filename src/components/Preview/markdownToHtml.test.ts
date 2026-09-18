@@ -16,9 +16,23 @@ describe("markdownToHtml", () => {
     const html = await markdownToHtml(
       "![Diagram](../assets/diagram.png)",
       { openPath: "C:/notes/docs/guide.md", workspaceRoot: "C:/notes" },
-      (path) => `asset://${path}`,
+      (path) => `http://asset.localhost/${path}`,
     );
 
-    expect(html).toContain('src="asset://C:/notes/assets/diagram.png"');
+    expect(html).toContain('src="http://asset.localhost/C:/notes/assets/diagram.png"');
+  });
+
+  it("strips a protocol-relative image source instead of rendering it", async () => {
+    // Regression test: a protocol-relative src resolves against the app's
+    // own origin at render time, which would otherwise let a malicious
+    // document read arbitrary local files through the wildcard-scoped asset
+    // protocol under the guise of an "external" image.
+    const html = await markdownToHtml(
+      "![x](//asset.localhost/C:/Users/victim/secret.png)",
+      { openPath: "C:/notes/docs/guide.md", workspaceRoot: "C:/notes" },
+    );
+
+    expect(html).not.toContain("asset.localhost");
+    expect(html).not.toContain("src=");
   });
 });

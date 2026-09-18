@@ -12,7 +12,14 @@ export function extractMarkdownHeadings(markdown: string): MarkdownHeading[] {
   let fenceCharacter = "";
   let fenceLength = 0;
 
-  for (const [lineIndex, line] of markdown.split(/\r?\n/).entries()) {
+  for (const [lineIndex, rawLine] of markdown.split("\n").entries()) {
+    // Splitting on "\n" alone (rather than /\r?\n/) keeps a CRLF line's "\r"
+    // in `rawLine`, so `rawLine.length + 1` below always equals the exact
+    // number of characters the line consumed in the original string —
+    // stripping the "\r" for matching would otherwise undercount every CRLF
+    // line's contribution to `offset`, throwing off every heading position
+    // that follows one.
+    const line = rawLine.endsWith("\r") ? rawLine.slice(0, -1) : rawLine;
     const fence = line.match(/^\s{0,3}(`{3,}|~{3,})/);
     if (fence) {
       const marker = fence[1];
@@ -37,7 +44,7 @@ export function extractMarkdownHeadings(markdown: string): MarkdownHeading[] {
         }
       }
     }
-    offset += line.length + 1;
+    offset += rawLine.length + 1;
   }
 
   return headings;

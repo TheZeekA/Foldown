@@ -1,10 +1,11 @@
+import { useMemo } from "react";
 import { extractMarkdownHeadings } from "../../editor/outline";
 import { useEditorStore } from "../../stores/editor";
 import "./DocumentOutline.css";
 
 export function DocumentOutline({ body }: { body: string }) {
   const jumpToPosition = useEditorStore((state) => state.jumpToPosition);
-  const headings = extractMarkdownHeadings(body);
+  const headings = useMemo(() => extractMarkdownHeadings(body), [body]);
 
   return (
     <aside className="document-outline" aria-label="Document outline">

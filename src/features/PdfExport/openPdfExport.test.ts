@@ -64,11 +64,34 @@ describe("openPdfExportWith", () => {
     await expect(operation).resolves.toBe(payload.outputPath);
 
     expect(calls).toEqual(["emit"]);
+    // The hidden window is reused across exports on success — it must not be
+    // closed and recreated from scratch on every single export.
+    expect(closeWindow).not.toHaveBeenCalled();
+  });
+
+  it("closes the window after a failed export so a bad state isn't reused", async () => {
+    const closeWindow = vi.fn().mockResolvedValue(undefined);
+    let finish!: (result: { requestId: string; outputPath: string; error: string | null }) => void;
+    const operation = openPdfExportWith(payload, {
+      getExistingWindow: async () => ({ label: "pdf-export" }),
+      listenForReady: async () => { throw new Error("should not listen"); },
+      listenForResult: async (handler) => { finish = handler; return () => undefined; },
+      createWindow: async () => { throw new Error("should not create"); },
+      emitPayload: async () => undefined,
+      closeWindow,
+      setTimer: () => 1,
+      clearTimer: vi.fn(),
+    });
+    await flushPromises();
+    finish({ requestId: payload.requestId, outputPath: "", error: "export failed" });
+    await expect(operation).rejects.toThrow("export failed");
+
     expect(closeWindow).toHaveBeenCalledOnce();
   });
 
-  it("rejects on readiness timeout and removes the listener", async () => {
+  it("rejects on readiness timeout, removes the listener, and closes the window", async () => {
     const unlisten = vi.fn();
+    const closeWindow = vi.fn().mockResolvedValue(undefined);
     let timeout!: () => void;
     const operation = openPdfExportWith(payload, {
       getExistingWindow: async () => null,
@@ -76,7 +99,7 @@ describe("openPdfExportWith", () => {
       listenForResult: async () => () => undefined,
       createWindow: async () => undefined,
       emitPayload: async () => undefined,
-      closeWindow: async () => undefined,
+      closeWindow,
       setTimer: (handler) => { timeout = handler; return 1; },
       clearTimer: vi.fn(),
     });
@@ -85,6 +108,7 @@ describe("openPdfExportWith", () => {
     timeout();
     await expect(operation).rejects.toThrow("timed out");
     expect(unlisten).toHaveBeenCalledOnce();
+    expect(closeWindow).toHaveBeenCalledOnce();
   });
 
   it("times out even if native window creation never settles", async () => {

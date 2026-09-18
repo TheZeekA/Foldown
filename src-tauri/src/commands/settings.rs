@@ -4,7 +4,7 @@ use crate::error::{AppError, AppResult};
 use crate::settings::store::{
     AiSettings, EditorFont, ProviderConfig, RecentWorkspace, SettingsStore,
 };
-use crate::workspace_authority::ActiveWorkspace;
+use crate::workspace_authority::{allow_asset_scope, ActiveWorkspace};
 
 #[tauri::command]
 pub fn get_recent_workspaces(store: State<SettingsStore>) -> AppResult<Vec<RecentWorkspace>> {
@@ -19,6 +19,7 @@ pub fn open_workspace(
     path: String,
 ) -> AppResult<String> {
     let root = active.activate(std::path::Path::new(&path))?;
+    allow_asset_scope(&app, &root);
     let touched = store.touch_recent_workspace(&root)?;
     let sync_root = root.clone();
     tauri::async_runtime::spawn(async move {

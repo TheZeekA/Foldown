@@ -219,14 +219,16 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
     set({ saveStatus: "saving" });
     try {
-      if (dirty && content !== get().lastSavedContent) {
-        try {
-          await recordHistorySnapshot(workspaceRoot, openPath, get().lastSavedContent);
-        } catch {
+      // The snapshot and the file write touch independent data, so they can
+      // run concurrently instead of paying their combined latency on every
+      // save (including debounced autosave, which fires on nearly every
+      // pause in typing).
+      const snapshot = dirty && content !== get().lastSavedContent
+        ? recordHistorySnapshot(workspaceRoot, openPath, get().lastSavedContent).catch(() => {
           // History is best-effort; a history failure must never block saving.
-        }
-      }
-      await saveFile(openPath, workspaceRoot, content);
+        })
+        : Promise.resolve();
+      await Promise.all([snapshot, saveFile(openPath, workspaceRoot, content)]);
       set({ dirty: false, saveStatus: "saved", lastSavedContent: content });
     } catch (error) {
       // Rethrow (in addition to recording the error in state) so callers that

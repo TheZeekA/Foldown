@@ -3,7 +3,7 @@ use std::path::Path;
 use tauri::State;
 
 use crate::native::PendingOpen;
-use crate::workspace_authority::ActiveWorkspace;
+use crate::workspace_authority::{allow_asset_scope, ActiveWorkspace};
 
 #[derive(Debug, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
@@ -47,10 +47,13 @@ pub fn take_pending_open(state: State<PendingOpen>) -> Option<String> {
 
 #[tauri::command]
 pub fn open_single_file(
+    app: tauri::AppHandle,
     active: State<ActiveWorkspace>,
     path: String,
 ) -> Result<SingleFileSession, String> {
-    prepare_single_file_session(Path::new(&path), &active)
+    let session = prepare_single_file_session(Path::new(&path), &active)?;
+    allow_asset_scope(&app, Path::new(&session.root));
+    Ok(session)
 }
 
 #[cfg(test)]

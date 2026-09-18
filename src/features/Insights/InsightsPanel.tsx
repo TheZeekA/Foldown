@@ -18,7 +18,11 @@ export function InsightsPanel({ onClose }: { onClose: () => void }) {
   const [error, setError] = useState<string | null>(null);
   useEffect(() => { if (tab !== "health" || !workspaceRoot) return; let current = true; setFindings(null); void getWorkspaceHealth(workspaceRoot).then((value) => { if (current) setFindings(value); }).catch((reason) => { if (current) setError(String(reason)); }); return () => { current = false; }; }, [tab, workspaceRoot]);
   if (!workspaceRoot) return null;
-  const navigate = (path: string) => { void openFile(path, workspaceRoot); };
+  // Backlink/tag paths come back from the Rust workspace scan as
+  // workspace-relative (see `normalized_path` in knowledge/mod.rs) — openFile
+  // (and the readFile command behind it) needs a path that resolves on its
+  // own, so it must be joined onto the workspace root first.
+  const navigate = (path: string) => { void openFile(`${workspaceRoot.replace(/[\\/]+$/, "")}/${path}`, workspaceRoot); };
   return <section className="insights" aria-label="Workspace insights">
     <header className="insights__header"><strong>Workspace insights</strong><button type="button" onClick={onClose} aria-label="Close workspace insights">×</button></header>
     <div className="insights__tabs" role="tablist">{(["links", "tags", "health"] as Tab[]).map((value) => <button key={value} type="button" role="tab" aria-selected={tab === value} className={tab === value ? "insights__tab--active" : ""} onClick={() => setTab(value)}>{value[0].toUpperCase() + value.slice(1)}</button>)}</div>

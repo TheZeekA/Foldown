@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use crate::error::{AppError, AppResult};
 use crate::fs::tree::{build_tree, TreeNode};
 use crate::settings::store::SettingsStore;
-use crate::workspace_authority::ActiveWorkspace;
+use crate::workspace_authority::{allow_asset_scope, ActiveWorkspace};
 use tauri::State;
 
 #[tauri::command]
@@ -58,6 +58,7 @@ pub fn create_workspace_folder(parent: &Path, name: &str) -> AppResult<PathBuf> 
 
 #[tauri::command]
 pub fn create_workspace(
+    app: tauri::AppHandle,
     store: State<SettingsStore>,
     active: State<ActiveWorkspace>,
     parent_path: String,
@@ -65,6 +66,7 @@ pub fn create_workspace(
 ) -> AppResult<String> {
     let created = create_workspace_folder(Path::new(&parent_path), &name)?;
     let root = active.activate(&created)?;
+    allow_asset_scope(&app, &root);
     store.touch_recent_workspace(&root)
 }
 

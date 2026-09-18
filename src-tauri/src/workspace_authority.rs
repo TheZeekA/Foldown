@@ -1,7 +1,17 @@
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
+use tauri::Manager;
+
 use crate::error::{AppError, AppResult};
+
+/// Grants the asset protocol read access to `root` so local images inside it
+/// can be loaded via `convertFileSrc`. The protocol's static config scope is
+/// intentionally empty (see `tauri.conf.json`) — access is granted only for
+/// the folder the user actually opened, instead of the whole filesystem.
+pub fn allow_asset_scope(app: &tauri::AppHandle, root: &Path) {
+    let _ = app.asset_protocol_scope().allow_directory(root, true);
+}
 
 #[derive(Default)]
 pub struct ActiveWorkspace {

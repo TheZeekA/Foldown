@@ -63,14 +63,21 @@ export async function openPdfExportWith(
       return await result;
     })();
     return await Promise.race([workflow, timeout]);
-  } finally {
-    if (timer !== undefined) dependencies.clearTimer(timer);
-    for (const cleanup of cleanups) cleanup();
+  } catch (error) {
+    // The hidden window may be mid-render or otherwise in a bad state after a
+    // failed/timed-out export — don't leave it around for the next export to
+    // reuse. A successful export leaves the window open (see the `finally`
+    // block below), since recreating it from scratch on every export is the
+    // avoidable latency this reuse exists to avoid.
     try {
       await dependencies.closeWindow();
     } catch {
-      // Export completion is authoritative; window cleanup is best-effort.
+      // Best-effort; the original error is what matters to the caller.
     }
+    throw error;
+  } finally {
+    if (timer !== undefined) dependencies.clearTimer(timer);
+    for (const cleanup of cleanups) cleanup();
   }
 }
 
